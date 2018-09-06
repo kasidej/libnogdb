@@ -300,8 +300,8 @@ namespace nogdb {
     }
 
     std::vector<ClassInfo>
-    Generic::getMultipleClassMapProperty(const BaseTxn &txn,
-                                         const std::set<Schema::ClassDescriptorPtr> &classDescriptors) {
+    Generic::getMultipleClassInfo(const BaseTxn &txn,
+                                  const std::set<Schema::ClassDescriptorPtr> &classDescriptors) {
         auto result = std::vector<ClassInfo> {};
         if (!classDescriptors.empty()) {
             for (const auto &classDescriptor: classDescriptors) {
@@ -315,6 +315,47 @@ namespace nogdb {
             }
         }
         return result;
+    }
+
+    PropertyType Generic::getPropertyType(const std::vector<ClassInfo> &classInfos, const std::string &propName) {
+        auto found = false;
+        auto propType = PropertyType::UNDEFINED;
+        for (const auto &classInfo: classInfos) {
+            try {
+                auto propInfo = classInfo.propertyInfo.nameToDesc.at(propName);
+                if (propType == PropertyType::UNDEFINED) {
+                    propType = propInfo.type;
+                } else if (propType != propInfo.type) {
+                    // found in other class but conflict propType.
+                    throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_CONFLICT_PROPTYPE);
+                }
+                found = true;
+            } catch (const std::out_of_range &_) {
+                ; // no-op
+            }
+        }
+        if (!found) {
+            throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_NOEXST_PROPERTY);
+        }
+        return propType;
+    }
+
+    PropertyMapType Generic::getPropertyMapType(const std::vector<ClassInfo> &classInfos,
+                                                const std::set<std::string> &propNames) {
+        auto result = PropertyMapType{};
+        for (const auto &propName: propNames) {
+            result.emplace(propName, Generic::getPropertyType(classInfos, propName));
+        }
+        return result;
+    }
+
+    PropertyMapType Generic::getPropertyMapType(const Txn &txn,
+                                                const std::set<std::string> &classNames,
+                                                const ClassType &classType,
+                                                const std::set<std::string> &propNames) {
+        auto classDescriptors = Generic::getMultipleClassDescriptor(txn, classNames, classType);
+        auto classInfos = Generic::getMultipleClassInfo(*txn.txnBase, classDescriptors);
+        return getPropertyMapType(classInfos, propNames);
     }
 
 }

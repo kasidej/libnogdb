@@ -59,6 +59,7 @@
 #define NOGDB_CTX_IN_USED_PROPERTY              0x2060
 #define NOGDB_CTX_NOEXST_RECORD	                0x3000
 #define NOGDB_CTX_INVALID_COMPARATOR            0x4000
+#define NOGDB_CTX_INVALID_EXPRESSION            0x4010
 #define NOGDB_CTX_INVALID_PROPTYPE_INDEX        0x6000
 #define NOGDB_CTX_NOEXST_INDEX                  0x6010
 #define NOGDB_CTX_DUPLICATE_INDEX               0x6020
@@ -192,6 +193,8 @@ namespace nogdb {
                     return "NOGDB_CTX_INTERNAL_ERROR: Oops! there might be some errors internally";
                 case NOGDB_CTX_INVALID_COMPARATOR:
                     return "NOGDB_CTX_INVALID_COMPARATOR: A comparator is not defined";
+                case NOGDB_CTX_INVALID_EXPRESSION:
+                    return "NOGDB_CTX_INVALID_EXPRESSION: An expression is invalid (wrong type/operator/comparator).";
                 case NOGDB_CTX_INVALID_CLASSNAME:
                     return "NOGDB_CTX_INVALID_CLASSNAME: A class name is empty or contains invalid characters";
                 case NOGDB_CTX_INVALID_PROPERTYNAME:

@@ -34,6 +34,7 @@
 #include "nogdb_context.h"
 #include "nogdb_txn.h"
 #include "nogdb_sql.h"
+#include "nogdb_expression.h"
 
 namespace nogdb {
 
@@ -118,21 +119,25 @@ namespace nogdb {
         static ResultSetCursor getAllEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor,
                                                 const ClassFilter &classFilter = ClassFilter{});
 
-        static ResultSet get(const Txn &txn, const std::string &className, const Condition &condition);
+        static ResultSet get(const Txn &txn, const std::string &className, const Condition &condition) __attribute__ ((deprecated));
 
-        static ResultSet get(const Txn &txn, const std::string &className, bool (*condition)(const Record &));
+        static ResultSet get(const Txn &txn, const std::string &className, bool (*condition)(const Record &)) __attribute__ ((deprecated));
 
-        static ResultSet get(const Txn &txn, const std::string &className, const MultiCondition &exp);
+        static ResultSet get(const Txn &txn, const std::string &className, const MultiCondition &exp) __attribute__ ((deprecated));
+
+        static ResultSet get(const Txn &txn, const std::string &className, const Expression &exp);
 
         static ResultSet getIndex(const Txn &txn, const std::string &className, const Condition &condition);
 
         static ResultSet getIndex(const Txn &txn, const std::string &className, const MultiCondition &exp);
 
-        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const Condition &condition);
+        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const Condition &condition) __attribute__ ((deprecated));
 
-        static ResultSetCursor getCursor(Txn &txn, const std::string &className, bool (*condition)(const Record &));
+        static ResultSetCursor getCursor(Txn &txn, const std::string &className, bool (*condition)(const Record &)) __attribute__ ((deprecated));
 
-        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const MultiCondition &exp);
+        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const MultiCondition &exp) __attribute__ ((deprecated));
+
+        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const Expression &exp);
 
         static ResultSetCursor getIndexCursor(Txn &txn, const std::string &className, const Condition &condition);
 
@@ -140,74 +145,98 @@ namespace nogdb {
 
         static ResultSet
         getInEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, const Condition &condition,
-                  const ClassFilter &classFilter = ClassFilter{});
+                  const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSet
         getInEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, bool (*condition)(const Record &),
-                  const ClassFilter &classFilter = ClassFilter{});
+                  const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSet
         getInEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, const MultiCondition &multiCondition,
+                  const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
+
+        static ResultSet
+        getInEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, const Expression &exp,
                   const ClassFilter &classFilter = ClassFilter{});
 
         static ResultSet
         getOutEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, const Condition &condition,
-                   const ClassFilter &classFilter = ClassFilter{});
+                   const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSet
         getOutEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, bool (*condition)(const Record &),
-                   const ClassFilter &classFilter = ClassFilter{});
+                   const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSet
         getOutEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, const MultiCondition &multiCondition,
+                   const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
+
+        static ResultSet
+        getOutEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, const Expression &exp,
                    const ClassFilter &classFilter = ClassFilter{});
 
         static ResultSet
         getAllEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, const Condition &condition,
-                   const ClassFilter &classFilter = ClassFilter{});
+                   const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSet
         getAllEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, bool (*condition)(const Record &),
-                   const ClassFilter &classFilter = ClassFilter{});
+                   const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSet
         getAllEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, const MultiCondition &multiCondition,
+                   const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
+
+        static ResultSet
+        getAllEdge(const Txn &txn, const RecordDescriptor &recordDescriptor, const Expression &exp,
                    const ClassFilter &classFilter = ClassFilter{});
 
         static ResultSetCursor
         getInEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, const Condition &condition,
-                        const ClassFilter &classFilter = ClassFilter{});
+                        const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSetCursor
         getInEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, bool (*condition)(const Record &),
-                        const ClassFilter &classFilter = ClassFilter{});
+                        const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSetCursor
         getInEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, const MultiCondition &multiCondition,
+                        const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
+
+        static ResultSetCursor
+        getInEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, const Expression &exp,
                         const ClassFilter &classFilter = ClassFilter{});
 
         static ResultSetCursor
         getOutEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, const Condition &condition,
-                         const ClassFilter &classFilter = ClassFilter{});
+                         const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSetCursor
         getOutEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, bool (*condition)(const Record &),
-                         const ClassFilter &classFilter = ClassFilter{});
+                         const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSetCursor
         getOutEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, const MultiCondition &multiCondition,
+                         const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
+
+        static ResultSetCursor
+        getOutEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, const Expression &exp,
                          const ClassFilter &classFilter = ClassFilter{});
 
         static ResultSetCursor
         getAllEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, const Condition &condition,
-                         const ClassFilter &classFilter = ClassFilter{});
+                         const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSetCursor
         getAllEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, bool (*condition)(const Record &),
-                         const ClassFilter &classFilter = ClassFilter{});
+                         const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
 
         static ResultSetCursor
         getAllEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, const MultiCondition &multiCondition,
+                         const ClassFilter &classFilter = ClassFilter{}) __attribute__ ((deprecated));
+
+        static ResultSetCursor
+        getAllEdgeCursor(Txn &txn, const RecordDescriptor &recordDescriptor, const Expression &exp,
                          const ClassFilter &classFilter = ClassFilter{});
     };
 
@@ -246,21 +275,25 @@ namespace nogdb {
 
         static ResultSet getSrcDst(const Txn &txn, const RecordDescriptor &recordDescriptor);
 
-        static ResultSet get(const Txn &txn, const std::string &className, const Condition &condition);
+        static ResultSet get(const Txn &txn, const std::string &className, const Condition &condition) __attribute__ ((deprecated));
 
-        static ResultSet get(const Txn &txn, const std::string &className, bool (*condition)(const Record &));
+        static ResultSet get(const Txn &txn, const std::string &className, bool (*condition)(const Record &)) __attribute__ ((deprecated));
 
-        static ResultSet get(const Txn &txn, const std::string &className, const MultiCondition &exp);
+        static ResultSet get(const Txn &txn, const std::string &className, const MultiCondition &exp) __attribute__ ((deprecated));
+
+        static ResultSet get(const Txn &txn, const std::string &className, const Expression &exp);
 
         static ResultSet getIndex(const Txn &txn, const std::string &className, const Condition &condition);
 
         static ResultSet getIndex(const Txn &txn, const std::string &className, const MultiCondition &exp);
 
-        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const Condition &condition);
+        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const Condition &condition) __attribute__ ((deprecated));
 
-        static ResultSetCursor getCursor(Txn &txn, const std::string &className, bool (*condition)(const Record &));
+        static ResultSetCursor getCursor(Txn &txn, const std::string &className, bool (*condition)(const Record &)) __attribute__ ((deprecated));
 
-        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const MultiCondition &exp);
+        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const MultiCondition &exp) __attribute__ ((deprecated));
+
+        static ResultSetCursor getCursor(Txn &txn, const std::string &className, const Expression &exp);
 
         static ResultSetCursor getIndexCursor(Txn &txn, const std::string &className, const Condition &condition);
 

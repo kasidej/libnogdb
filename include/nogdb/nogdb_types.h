@@ -204,6 +204,11 @@ namespace nogdb {
         static Bytes toBytes(const T& data) {
             return Converter<T>::toBytes(data);
         }
+
+        bool operator<(const Bytes &b) const {
+            return this->size_== b.size_ && memcpy(this->value_, b.value_, this->size_);
+        }
+
     private:
         unsigned char *value_{nullptr};
         size_t size_{0};

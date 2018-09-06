@@ -52,15 +52,15 @@ void test_txn_create_only_vertex_commit() {
 
         nogdb::Txn txnRo3{*ctx, nogdb::Txn::Mode::READ_ONLY};
 
-        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Chang"));
+        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Chang")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Chang");
 
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Chang"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Chang")));
         assert(res.empty());
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Chang"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Chang")));
         assert(res.empty());
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Chang"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Chang")));
         assert(res.empty());
 
         txnRw1.commit();
@@ -68,18 +68,18 @@ void test_txn_create_only_vertex_commit() {
         nogdb::Txn txnRo4{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
 
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Chang"));
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Chang")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Chang");
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Chang"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Chang")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Chang");
 
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Chang"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Chang")));
         assert(res.empty());
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Chang"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Chang")));
         assert(res.empty());
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Chang"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Chang")));
         assert(res.empty());
 
         txnRo1.commit();
@@ -106,7 +106,7 @@ void test_txn_create_only_vertex_rollback() {
         nogdb::Record r{};
         r.set("name", "Koh Mak").set("area", "87.92");
         nogdb::Vertex::create(txnRw1, "islands", r);
-        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
 
@@ -114,9 +114,9 @@ void test_txn_create_only_vertex_rollback() {
 
         nogdb::Txn txnRo{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw00{*ctx, nogdb::Txn::Mode::READ_WRITE};
-        res = nogdb::Vertex::get(txnRo, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRo, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(res.empty());
-        res = nogdb::Vertex::get(txnRw00, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRw00, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(res.empty());
 
         txnRo.commit();
@@ -140,7 +140,7 @@ void test_txn_rollback_when_destroy() {
         nogdb::Record r{};
         r.set("name", "Koh Mak").set("area", "87.92");
         nogdb::Vertex::create(txnRw, "islands", r);
-        auto res = nogdb::Vertex::get(txnRw, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        auto res = nogdb::Vertex::get(txnRw, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
     } catch (const nogdb::Error &ex) {
@@ -150,7 +150,7 @@ void test_txn_rollback_when_destroy() {
 
     try {
         nogdb::Txn txnRo{*ctx, nogdb::Txn::Mode::READ_ONLY};
-        auto res = nogdb::Vertex::get(txnRo, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        auto res = nogdb::Vertex::get(txnRo, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(res.empty());
     } catch (const nogdb::Error &ex) {
         std::cout << "Error: " << ex.what() << std::endl;
@@ -186,16 +186,16 @@ void test_txn_delete_only_vertex_commit() {
 
         nogdb::Txn txnRo3{*ctx, nogdb::Txn::Mode::READ_ONLY};
 
-        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(res.empty());
 
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
 
@@ -203,18 +203,18 @@ void test_txn_delete_only_vertex_commit() {
 
         nogdb::Txn txnRo4{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(res.empty());
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(res.empty());
 
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
 
@@ -245,16 +245,16 @@ void test_txn_delete_only_vertex_rollback() {
 
         nogdb::Txn txnRw1{*ctx, nogdb::Txn::Mode::READ_WRITE};
         nogdb::Vertex::destroy(txnRw1, vdesc);
-        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(res.empty());
         txnRw1.rollback();
 
         nogdb::Txn txnRo{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
-        res = nogdb::Vertex::get(txnRo, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRo, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
         assert(res[0].record.get("name").toText() == "Koh Mak");
 
@@ -290,18 +290,18 @@ void test_txn_create_only_edge_commit() {
 
         nogdb::Txn txnRo3{*ctx, nogdb::Txn::Mode::READ_ONLY};
 
-        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Kood"));
+        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Kood")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
-        auto resE = nogdb::Edge::get(txnRw1, "bridge", nogdb::Condition("name").eq("yellow"));
+        auto resE = nogdb::Edge::get(txnRw1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
 
-        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
-        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
-        resE = nogdb::Edge::get(txnRo3, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo3, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
 
         txnRw1.commit();
@@ -309,16 +309,16 @@ void test_txn_create_only_edge_commit() {
         nogdb::Txn txnRo4{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
 
-        resE = nogdb::Edge::get(txnRo4, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo4, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
-        resE = nogdb::Edge::get(txnRw2, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRw2, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
 
-        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
-        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
-        resE = nogdb::Edge::get(txnRo3, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo3, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
 
         txnRo1.commit();
@@ -349,11 +349,11 @@ void test_txn_create_only_edge_rollback() {
                                             nogdb::Record{}.set("name", "Koh Mak").set("area", "87.92"));
         nogdb::Edge::create(txnRw1, "bridge", vdesc1, vdesc2, nogdb::Record{}.set("name", "yellow"));
 
-        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Kood"));
+        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Kood")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Mak"));
+        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Mak")));
         assert(!res.empty());
-        auto resE = nogdb::Edge::get(txnRw1, "bridge", nogdb::Condition("name").eq("yellow"));
+        auto resE = nogdb::Edge::get(txnRw1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
 
         txnRw1.rollback();
@@ -361,9 +361,9 @@ void test_txn_create_only_edge_rollback() {
         nogdb::Txn txnRo{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw00{*ctx, nogdb::Txn::Mode::READ_WRITE};
 
-        resE = nogdb::Edge::get(txnRo, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
-        resE = nogdb::Edge::get(txnRw00, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRw00, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
 
         txnRo.commit();
@@ -400,35 +400,35 @@ void test_txn_delete_only_edge_commit() {
         nogdb::Txn txnRw1{*ctx, nogdb::Txn::Mode::READ_WRITE};
         nogdb::Txn txnRo2{*ctx, nogdb::Txn::Mode::READ_ONLY};
 
-        auto edesc = nogdb::Edge::get(txnRw1, "bridge", nogdb::Condition("name").eq("yellow"));
+        auto edesc = nogdb::Edge::get(txnRw1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         nogdb::Edge::destroy(txnRw1, edesc[0].descriptor);
 
         nogdb::Txn txnRo3{*ctx, nogdb::Txn::Mode::READ_ONLY};
 
-        auto resE = nogdb::Edge::get(txnRw1, "bridge", nogdb::Condition("name").eq("yellow"));
+        auto resE = nogdb::Edge::get(txnRw1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
 
-        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
-        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
-        resE = nogdb::Edge::get(txnRo3, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo3, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
 
         txnRw1.commit();
 
         nogdb::Txn txnRo4{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
-        resE = nogdb::Edge::get(txnRo4, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo4, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
-        resE = nogdb::Edge::get(txnRw2, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRw2, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
 
-        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
-        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
-        resE = nogdb::Edge::get(txnRo3, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo3, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
 
         txnRo1.commit();
@@ -465,18 +465,18 @@ void test_txn_delete_only_edge_rollback() {
 
     try {
         nogdb::Txn txnRw1{*ctx, nogdb::Txn::Mode::READ_WRITE};
-        auto edesc = nogdb::Edge::get(txnRw1, "bridge", nogdb::Condition("name").eq("yellow"));
+        auto edesc = nogdb::Edge::get(txnRw1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         nogdb::Edge::destroy(txnRw1, edesc[0].descriptor);
-        auto resE = nogdb::Edge::get(txnRw1, "bridge", nogdb::Condition("name").eq("yellow"));
+        auto resE = nogdb::Edge::get(txnRw1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
 
         txnRw1.rollback();
 
         nogdb::Txn txnRo{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
-        resE = nogdb::Edge::get(txnRo, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
-        resE = nogdb::Edge::get(txnRw2, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRw2, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
 
         txnRo.commit();
@@ -485,7 +485,7 @@ void test_txn_delete_only_edge_rollback() {
         nogdb::Txn txnRw00{*ctx, nogdb::Txn::Mode::READ_WRITE};
         nogdb::Vertex::destroy(txnRw00, vdesc1);
         nogdb::Vertex::destroy(txnRw00, vdesc2);
-        resE = nogdb::Edge::get(txnRw00, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRw00, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
 
         nogdb::Txn txnRo1{*ctx, nogdb::Txn::Mode::READ_ONLY};
@@ -494,9 +494,9 @@ void test_txn_delete_only_edge_rollback() {
 
         nogdb::Txn txnRo2{*ctx, nogdb::Txn::Mode::READ_ONLY};
 
-        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo1, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(!resE.empty());
-        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Condition("name").eq("yellow"));
+        resE = nogdb::Edge::get(txnRo2, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("yellow")));
         assert(resE.empty());
 
         txnRo1.rollback();
@@ -866,34 +866,34 @@ void test_txn_create_only_vertex_multiversion_commit() {
         nogdb::Txn txnRo4{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
 
-        auto res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        auto res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(res.empty());
-        res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
-        assert(res.empty());
-
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Samed"));
-        assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
 
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
 
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
 
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
+        assert(res.empty());
+
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
+        assert(!res.empty());
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
 
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
     } catch (const nogdb::Error &ex) {
         std::cout << "Error: " << ex.what() << std::endl;
@@ -926,9 +926,9 @@ void test_txn_create_only_vertex_multiversion_rollback() {
 
         nogdb::Vertex::create(txnRw1, "islands", nogdb::Record{}.set("name", "Koh Phe Phe"));
 
-        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
 
         nogdb::Txn txnRo3{*ctx, nogdb::Txn::Mode::READ_ONLY};
@@ -938,46 +938,46 @@ void test_txn_create_only_vertex_multiversion_rollback() {
         nogdb::Txn txnRo4{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
 
-        res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Condition("name").eq("Koh Tarutao"));
+        res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Tarutao")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(res.empty());
-        res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
-        assert(res.empty());
-
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Tarutao"));
-        assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Samed"));
-        assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo0, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
 
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Tarutao"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Tarutao")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
 
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Tarutao"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Tarutao")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
 
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Tarutao"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Tarutao")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
 
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Tarutao"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Tarutao")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
+        assert(res.empty());
+
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Tarutao")));
+        assert(!res.empty());
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
+        assert(!res.empty());
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
     } catch (const nogdb::Error &ex) {
         std::cout << "Error: " << ex.what() << std::endl;
@@ -1009,9 +1009,9 @@ void test_txn_delete_only_vertex_multiversion_commit() {
 
         nogdb::Vertex::destroy(txnRw1, v2);
 
-        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
 
         nogdb::Txn txnRo3{*ctx, nogdb::Txn::Mode::READ_ONLY};
@@ -1021,25 +1021,25 @@ void test_txn_delete_only_vertex_multiversion_commit() {
         nogdb::Txn txnRo4{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
 
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
     } catch (const nogdb::Error &ex) {
         std::cout << "Error: " << ex.what() << std::endl;
@@ -1071,9 +1071,9 @@ void test_txn_delete_only_vertex_multiversion_rollback() {
 
         nogdb::Vertex::destroy(txnRw1, v2);
 
-        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        auto res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRw1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(res.empty());
 
         nogdb::Txn txnRo3{*ctx, nogdb::Txn::Mode::READ_ONLY};
@@ -1083,25 +1083,25 @@ void test_txn_delete_only_vertex_multiversion_rollback() {
         nogdb::Txn txnRo4{*ctx, nogdb::Txn::Mode::READ_ONLY};
         nogdb::Txn txnRw2{*ctx, nogdb::Txn::Mode::READ_WRITE};
 
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo1, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo3, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRo4, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Samed"));
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samed")));
         assert(!res.empty());
-        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Condition("name").eq("Koh Phe Phe"));
+        res = nogdb::Vertex::get(txnRw2, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Phe Phe")));
         assert(!res.empty());
     } catch (const nogdb::Error &ex) {
         std::cout << "Error: " << ex.what() << std::endl;
@@ -1149,7 +1149,7 @@ void test_txn_create_edges_multiversion_commit() {
 
         std::vector<std::function<void(nogdb::Txn &)>> testCasesV0, testCasesV1, testCasesV2;
         testCasesV0.push_back([&](nogdb::Txn &txn) {
-            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 23"));
+            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 23")));
             assert(res.empty());
         });
         testCasesV0.push_back([&](nogdb::Txn &txn) {
@@ -1158,9 +1158,9 @@ void test_txn_create_edges_multiversion_commit() {
             assert(res[0].record.get("name").toText() == "bridge 21");
         });
         testCasesV1.push_back([&](nogdb::Txn &txn) {
-            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 13"));
+            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 13")));
             assert(res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 23"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 23")));
             assert(!res.empty());
         });
         testCasesV1.push_back([&](nogdb::Txn &txn) {
@@ -1178,13 +1178,13 @@ void test_txn_create_edges_multiversion_commit() {
             assertSize(res, 2);
         });
         testCasesV2.push_back([&](nogdb::Txn &txn) {
-            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 13"));
+            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 13")));
             assert(!res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 23"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 23")));
             assert(!res.empty());
         });
         testCasesV2.push_back([&](nogdb::Txn &txn) {
-            auto e = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 13"));
+            auto e = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 13")));
             auto res = nogdb::Edge::getSrc(txn, e[0].descriptor);
             assert(res.descriptor == v1);
             res = nogdb::Edge::getDst(txn, e[0].descriptor);
@@ -1254,9 +1254,9 @@ void test_txn_create_edges_multiversion_rollback() {
 
         std::vector<std::function<void(nogdb::Txn &)>> testCasesV1;
         testCasesV1.push_back([&](nogdb::Txn &txn) {
-            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 13"));
+            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 13")));
             assert(res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 23"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 23")));
             assert(!res.empty());
         });
         testCasesV1.push_back([&](nogdb::Txn &txn) {
@@ -1327,11 +1327,11 @@ void test_txn_delete_edges_multiversion_commit() {
 
         std::vector<std::function<void(nogdb::Txn &)>> testCasesV0, testCasesV1, testCasesV2;
         testCasesV0.push_back([&](nogdb::Txn &txn) {
-            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 13"));
+            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 13")));
             assert(!res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 23"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 23")));
             assert(!res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 12"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 12")));
             assert(!res.empty());
         });
         testCasesV0.push_back([&](nogdb::Txn &txn) {
@@ -1347,11 +1347,11 @@ void test_txn_delete_edges_multiversion_commit() {
             assertSize(res, 2);
         });
         testCasesV1.push_back([&](nogdb::Txn &txn) {
-            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 13"));
+            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 13")));
             assert(!res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 23"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 23")));
             assert(!res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 12"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 12")));
             assert(res.empty());
         });
         testCasesV1.push_back([&](nogdb::Txn &txn) {
@@ -1372,13 +1372,13 @@ void test_txn_delete_edges_multiversion_commit() {
             assertSize(res, 2);
         });
         testCasesV2.push_back([&](nogdb::Txn &txn) {
-            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 13"));
+            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 13")));
             assert(res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 23"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 23")));
             assert(res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 12"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 12")));
             assert(res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 21"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 21")));
             assert(!res.empty());
         });
         testCasesV2.push_back([&](nogdb::Txn &txn) {
@@ -1448,11 +1448,11 @@ void test_txn_delete_edges_multiversion_rollback() {
 
         std::vector<std::function<void(nogdb::Txn &)>> testCasesV1;
         testCasesV1.push_back([&](nogdb::Txn &txn) {
-            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 13"));
+            auto res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 13")));
             assert(!res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 23"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 23")));
             assert(!res.empty());
-            res = nogdb::Edge::get(txn, "bridge", nogdb::Condition("name").eq("bridge 12"));
+            res = nogdb::Edge::get(txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("bridge 12")));
             assert(res.empty());
         });
         testCasesV1.push_back([&](nogdb::Txn &txn) {
@@ -1797,8 +1797,8 @@ void test_txn_reopen_ctx() {
 
     try {
         auto txn = std::unique_ptr<nogdb::Txn>(new nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_WRITE});
-        auto v1 = nogdb::Vertex::get(*txn, "islands", nogdb::Condition("name").eq("Koh Samui"));
-        auto v2 = nogdb::Vertex::get(*txn, "islands", nogdb::Condition("name").eq("Koh Tao"));
+        auto v1 = nogdb::Vertex::get(*txn, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Samui")));
+        auto v2 = nogdb::Vertex::get(*txn, "islands", nogdb::Expression("name").eq(nogdb::Bytes("Koh Tao")));
         nogdb::Edge::create(*txn, "bridge", v1[0].descriptor, v2[0].descriptor, nogdb::Record{}.set("name", "red"));
         txn->commit();
     } catch (const nogdb::Error &ex) {
@@ -1817,7 +1817,7 @@ void test_txn_reopen_ctx() {
 
     try {
         auto txn = std::unique_ptr<nogdb::Txn>(new nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY});
-        auto resE = nogdb::Edge::get(*txn, "bridge", nogdb::Condition("name").eq("red"));
+        auto resE = nogdb::Edge::get(*txn, "bridge", nogdb::Expression("name").eq(nogdb::Bytes("red")));
         assert(!resE.empty());
         auto res = nogdb::Edge::getSrcDst(*txn, resE[0].descriptor);
         assert(!res.empty());

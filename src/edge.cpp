@@ -476,6 +476,10 @@ namespace nogdb {
         return Compare::compareMultiCondition(txn, className, ClassType::EDGE, multiCondition);
     }
 
+    ResultSet Edge::get(const Txn &txn, const std::string &className, const Expression &exp) {
+        return Compare::compareExpression(txn, className, ClassType::EDGE, exp);
+    }
+
     ResultSetCursor Edge::getCursor(Txn &txn, const std::string &className, const Condition &condition) {
         auto result = ResultSetCursor{txn};
         auto metadata = Compare::compareConditionRdesc(txn, className, ClassType::EDGE, condition);
@@ -493,6 +497,13 @@ namespace nogdb {
     ResultSetCursor Edge::getCursor(Txn &txn, const std::string &className, const MultiCondition &exp) {
         auto result = ResultSetCursor{txn};
         auto metadata = Compare::compareMultiConditionRdesc(txn, className, ClassType::EDGE, exp);
+        result.metadata.insert(result.metadata.end(), metadata.cbegin(), metadata.cend());
+        return result;
+    }
+
+    ResultSetCursor Edge::getCursor(Txn &txn, const std::string &className, const Expression &exp) {
+        auto result = ResultSetCursor{txn};
+        auto metadata = Compare::compareExpressionRdesc(txn, className, ClassType::EDGE, exp);
         result.metadata.insert(result.metadata.end(), metadata.cbegin(), metadata.cend());
         return result;
     }

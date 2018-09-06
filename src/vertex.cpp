@@ -379,6 +379,12 @@ namespace nogdb {
         return Compare::compareMultiCondition(txn, className, ClassType::VERTEX, multiCondition);
     }
 
+    ResultSet Vertex::get(const Txn &txn,
+                          const std::string &className,
+                          const Expression &exp) {
+        return Compare::compareExpression(txn, className, ClassType::VERTEX, exp);
+    }
+
     ResultSetCursor Vertex::getCursor(Txn &txn, const std::string &className, const Condition &condition) {
         auto result = ResultSetCursor{txn};
         auto metadata = Compare::compareConditionRdesc(txn, className, ClassType::VERTEX, condition);
@@ -397,6 +403,13 @@ namespace nogdb {
     ResultSetCursor Vertex::getCursor(Txn &txn, const std::string &className, const MultiCondition &exp) {
         auto result = ResultSetCursor{txn};
         auto metadata = Compare::compareMultiConditionRdesc(txn, className, ClassType::VERTEX, exp);
+        result.metadata.insert(result.metadata.end(), metadata.cbegin(), metadata.cend());
+        return result;
+    }
+
+    ResultSetCursor Vertex::getCursor(Txn &txn, const std::string &className, const Expression &exp) {
+        auto result = ResultSetCursor{txn};
+        auto metadata = Compare::compareExpressionRdesc(txn, className, ClassType::VERTEX, exp);
         result.metadata.insert(result.metadata.end(), metadata.cbegin(), metadata.cend());
         return result;
     }
@@ -423,6 +436,18 @@ namespace nogdb {
                                                   &Graph::getEdgeClassIn,
                                                   multiCondition,
                                                   classFilter);
+    }
+
+    ResultSet Vertex::getInEdge(const Txn &txn,
+                                const RecordDescriptor &recordDescriptor,
+                                const Expression &exp,
+                                const ClassFilter &classFilter) {
+        return Compare::compareEdgeExpression(txn,
+                                              recordDescriptor,
+                                              &Graph::getEdgeIn,
+                                              &Graph::getEdgeClassIn,
+                                              exp,
+                                              classFilter);
     }
 
     ResultSet Vertex::getInEdge(const Txn &txn,
@@ -468,6 +493,21 @@ namespace nogdb {
     }
 
     ResultSetCursor Vertex::getInEdgeCursor(Txn &txn,
+                                            const RecordDescriptor &recordDescriptor,
+                                            const Expression &exp,
+                                            const ClassFilter &classFilter) {
+        auto result = ResultSetCursor{txn};
+        auto metadata = Compare::compareEdgeExpressionRdesc(txn,
+                                                                recordDescriptor,
+                                                                &Graph::getEdgeIn,
+                                                                &Graph::getEdgeClassIn,
+                                                                exp,
+                                                                classFilter);
+        result.metadata.insert(result.metadata.end(), metadata.cbegin(), metadata.cend());
+        return result;
+    }
+
+    ResultSetCursor Vertex::getInEdgeCursor(Txn &txn,
                                              const RecordDescriptor &recordDescriptor,
                                              bool (*condition)(const Record &record),
                                              const ClassFilter &classFilter) {
@@ -504,6 +544,18 @@ namespace nogdb {
                                                   &Graph::getEdgeClassOut,
                                                   multiCondition,
                                                   classFilter);
+    }
+
+    ResultSet Vertex::getOutEdge(const Txn &txn,
+                                 const RecordDescriptor &recordDescriptor,
+                                 const Expression &exp,
+                                 const ClassFilter &classFilter) {
+        return Compare::compareEdgeExpression(txn,
+                                              recordDescriptor,
+                                              &Graph::getEdgeOut,
+                                              &Graph::getEdgeClassOut,
+                                              exp,
+                                              classFilter);
     }
 
     ResultSet Vertex::getOutEdge(const Txn &txn,
@@ -551,6 +603,22 @@ namespace nogdb {
     }
 
     ResultSetCursor Vertex::getOutEdgeCursor(Txn &txn,
+                                             const RecordDescriptor &recordDescriptor,
+                                             const Expression &exp,
+                                             const ClassFilter &classFilter) {
+        auto result = ResultSetCursor{txn};
+        auto metadata = Compare::compareEdgeExpressionRdesc(txn,
+                                                            recordDescriptor,
+                                                            &Graph::getEdgeOut,
+                                                            &Graph::getEdgeClassOut,
+                                                            exp,
+                                                            classFilter);
+        result.metadata.insert(result.metadata.end(), metadata.cbegin(), metadata.cend());
+        return result;
+
+    }
+
+    ResultSetCursor Vertex::getOutEdgeCursor(Txn &txn,
                                               const RecordDescriptor &recordDescriptor,
                                               bool (*condition)(const Record &record),
                                               const ClassFilter &classFilter) {
@@ -587,6 +655,18 @@ namespace nogdb {
                                                   &Graph::getEdgeClassInOut,
                                                   multiCondition,
                                                   classFilter);
+    }
+
+    ResultSet Vertex::getAllEdge(const Txn &txn,
+                                 const RecordDescriptor &recordDescriptor,
+                                 const Expression &exp,
+                                 const ClassFilter &classFilter) {
+        return Compare::compareEdgeExpression(txn,
+                                              recordDescriptor,
+                                              &Graph::getEdgeInOut,
+                                              &Graph::getEdgeClassInOut,
+                                              exp,
+                                              classFilter);
     }
 
     ResultSet Vertex::getAllEdge(const Txn &txn,
@@ -627,6 +707,21 @@ namespace nogdb {
                                                                 &Graph::getEdgeClassInOut,
                                                                 multiCondition,
                                                                 classFilter);
+        result.metadata.insert(result.metadata.end(), metadata.cbegin(), metadata.cend());
+        return result;
+    }
+
+    ResultSetCursor Vertex::getAllEdgeCursor(Txn &txn,
+                                             const RecordDescriptor &recordDescriptor,
+                                             const Expression &exp,
+                                             const ClassFilter &classFilter) {
+        auto result = ResultSetCursor{txn};
+        auto metadata = Compare::compareEdgeExpressionRdesc(txn,
+                                                            recordDescriptor,
+                                                            &Graph::getEdgeInOut,
+                                                            &Graph::getEdgeClassInOut,
+                                                            exp,
+                                                            classFilter);
         result.metadata.insert(result.metadata.end(), metadata.cbegin(), metadata.cend());
         return result;
     }

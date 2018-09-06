@@ -230,28 +230,28 @@ void test_create_informative_graph() {
 void test_find_vertex() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assertSize(res, 1);
         auto tmp = Coordinates{};
         res[0].record.get("coordinates").convertTo(tmp);
         assert(tmp.x == -1.00);
         assert(tmp.y == 1.00);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Tokyo Tower"));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Tokyo Tower")));
         assertSize(res, 0);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("temperature").eq(18));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("temperature").eq(nogdb::Bytes(18)));
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Pentagon");
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("postcode").eq(11600U));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("postcode").eq(nogdb::Bytes(11600U)));
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "ThaiCC Tower");
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("price").eq(280000LL));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("price").eq(nogdb::Bytes(280000LL)));
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Dubai Building");
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("population").eq(900ULL));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("population").eq(nogdb::Bytes(900ULL)));
         assertSize(res, 2);
         assert(res[0].record.get("name").toText() == "ThaiCC Tower");
         assert(res[1].record.get("name").toText() == "Pentagon");
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("rating").eq(4.5));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("rating").eq(nogdb::Bytes(4.5)));
         assertSize(res, 2);
         assert(res[0].record.get("name").toText() == "New York Tower");
         assert(res[1].record.get("name").toText() == "Empire State Building");
@@ -261,25 +261,25 @@ void test_find_vertex() {
     }
 
     try {
-        auto res = nogdb::Vertex::get(txn, "locations", !nogdb::Condition("name").eq("Pentagon"));
+        auto res = nogdb::Vertex::get(txn, "locations", !nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assertSize(res, 4);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("temperature").gt(35));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("temperature").gt(nogdb::Bytes(35)));
         assertSize(res, 1);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("rating").ge(4.5));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("rating").ge(nogdb::Bytes(4.5)));
         assertSize(res, 3);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("postcode").lt(10300U));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("postcode").lt(nogdb::Bytes(10300U)));
         assertSize(res, 2);
-        nogdb::Vertex::get(txn, "locations", nogdb::Condition("population").le(900ULL));
+        nogdb::Vertex::get(txn, "locations", nogdb::Expression("population").le(nogdb::Bytes(900ULL)));
         assertSize(res, 2);
-        res = nogdb::Vertex::get(txn, "locations", !nogdb::Condition("price"));
+        res = nogdb::Vertex::get(txn, "locations", !nogdb::Expression("price"));
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "ThaiCC Tower");
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("temperature"));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("temperature"));
         assertSize(res, 4);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq(100));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes(100)));
         assertSize(res, 0);
         res = nogdb::Vertex::get(txn, "locations",
-                                 nogdb::Condition("population").eq(static_cast<unsigned long long>(2000)));
+                                 nogdb::Expression("population").eq(nogdb::Bytes(2000ULL)));
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "New York Tower");
     } catch (const nogdb::Error &ex) {
@@ -288,27 +288,27 @@ void test_find_vertex() {
     }
 
     try {
-        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").contain("tag").ignoreCase());
+        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").contain(nogdb::Bytes("tag")).ignoreCase());
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Pentagon");
-        res = nogdb::Vertex::get(txn, "locations", !nogdb::Condition("name").contain("u").ignoreCase());
+        res = nogdb::Vertex::get(txn, "locations", !nogdb::Expression("name").contain(nogdb::Bytes("u")).ignoreCase());
         assertSize(res, 3);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").beginWith("thai").ignoreCase());
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").beginWith(nogdb::Bytes("thai")).ignoreCase());
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "ThaiCC Tower");
-        res = nogdb::Vertex::get(txn, "locations", !nogdb::Condition("name").beginWith("Thai"));
+        res = nogdb::Vertex::get(txn, "locations", !nogdb::Expression("name").beginWith(nogdb::Bytes("Thai")));
         assertSize(res, 4);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").endWith("TOWER").ignoreCase());
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").endWith(nogdb::Bytes("TOWER")).ignoreCase());
         assertSize(res, 2);
-        res = nogdb::Vertex::get(txn, "locations", !nogdb::Condition("name").endWith("Building"));
+        res = nogdb::Vertex::get(txn, "locations", !nogdb::Expression("name").endWith(nogdb::Bytes("Building")));
         assertSize(res, 3);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").gt("Pentagon"));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").gt(nogdb::Bytes("Pentagon")));
         assertSize(res, 1);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").ge("Pentagon"));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").ge(nogdb::Bytes("Pentagon")));
         assertSize(res, 2);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").lt("Pentagon"));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").lt(nogdb::Bytes("Pentagon")));
         assertSize(res, 3);
-        res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").le("Pentagon"));
+        res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").le(nogdb::Bytes("Pentagon")));
         assertSize(res, 4);
     } catch (const nogdb::Error &ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
@@ -322,7 +322,7 @@ void test_find_vertex() {
 void test_find_invalid_vertex() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "location", nogdb::Condition("name"));
+        auto res = nogdb::Vertex::get(txn, "location", nogdb::Expression("name"));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -331,7 +331,7 @@ void test_find_invalid_vertex() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("names"));
+        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("names"));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -340,7 +340,7 @@ void test_find_invalid_vertex() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Condition("coordinates").contain("invalid"));
+        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Expression("coordinates").contain(nogdb::Bytes("invalid")));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -349,7 +349,7 @@ void test_find_invalid_vertex() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        auto res = nogdb::Vertex::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -361,7 +361,7 @@ void test_find_invalid_vertex() {
 void test_find_edge() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("George Street"));
+        auto res = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("George Street")));
         assertSize(res, 1);
         auto tmp = Coordinates{};
         res[0].record.get("coordinates").convertTo(tmp);
@@ -379,7 +379,7 @@ void test_find_edge() {
 void test_find_invalid_edge() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::get(txn, "streets", nogdb::Condition("name"));
+        auto res = nogdb::Edge::get(txn, "streets", nogdb::Expression("name"));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -388,7 +388,7 @@ void test_find_invalid_edge() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::get(txn, "railway", nogdb::Condition("names"));
+        auto res = nogdb::Edge::get(txn, "railway", nogdb::Expression("names"));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -397,7 +397,7 @@ void test_find_invalid_edge() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::get(txn, "highway", nogdb::Condition("coordinates").contain("invalid"));
+        auto res = nogdb::Edge::get(txn, "highway", nogdb::Expression("coordinates").contain(nogdb::Bytes("invalid")));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -406,7 +406,7 @@ void test_find_invalid_edge() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto res = nogdb::Edge::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -421,13 +421,13 @@ void test_find_edge_in() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Dubai Building"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Dubai Building")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("George Street"),
+        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("George Street")),
                                             nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("distance").gt(40.0),
+        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("distance").gt(nogdb::Bytes(40.0)),
                                        nogdb::ClassFilter{"street"});
         assertSize(res, 2);
         std::sort(res.begin(), res.end(), cmp);
@@ -439,13 +439,13 @@ void test_find_edge_in() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Isaac Street"), classNames);
+        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Isaac Street")), classNames);
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("distance").lt(200.0), classNames);
+        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("distance").lt(nogdb::Bytes(200.0)), classNames);
         assertSize(res, 3);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Dwayne Way");
@@ -457,12 +457,12 @@ void test_find_edge_in() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("The Outer Ring C"));
+        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("The Outer Ring C")));
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("distance").ge(36.2));
+        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("distance").ge(nogdb::Bytes(36.2)));
         assertSize(res, 3);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Eastern Way");
@@ -483,26 +483,26 @@ void test_find_edge_out() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                              nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("distance").ge(100.0),
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("distance").ge(nogdb::Bytes(100.0)),
                                         nogdb::ClassFilter{"railway"});
         assertSize(res, 3);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Bamboo Way");
         assert(res[1].record.get("name").toText() == "Catalina Way");
         assert(res[2].record.get("name").toText() == "Dwayne Way");
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("temperature").le(42),
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("temperature").le(nogdb::Bytes(42)),
                                         nogdb::ClassFilter{"railway"});
         assertSize(res, 2);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Andy Way");
         assert(res[1].record.get("name").toText() == "Catalina Way");
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Condition("temperature"),
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Expression("temperature"),
                                         nogdb::ClassFilter{"railway"});
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Dwayne Way");
@@ -512,20 +512,20 @@ void test_find_edge_out() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Condition("name").eq("Andrew Street"), classNames);
+        auto res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")), classNames);
         assertSize(res, 5);
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Condition("name").contain("boo"), classNames);
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Expression("name").contain(nogdb::Bytes("boo")), classNames);
         assertSize(res, 5);
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("name").contain("BOO").ignoreCase(), classNames);
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("name").contain(nogdb::Bytes("BOO")).ignoreCase(), classNames);
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Bamboo Way");
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Condition("name").beginWith("a").ignoreCase(), classNames);
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Expression("name").beginWith(nogdb::Bytes("a")).ignoreCase(), classNames);
         assertSize(res, 4);
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("name").beginWith("A"), classNames);
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("name").beginWith(nogdb::Bytes("A")), classNames);
         assertSize(res, 2);
     } catch (const nogdb::Error &ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
@@ -533,22 +533,22 @@ void test_find_edge_out() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("The Outer Ring B"));
+        auto res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("The Outer Ring B")));
         assertSize(res, 1);
         res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor,
-                                        !nogdb::Condition("name").endWith("StrEEt").ignoreCase());
+                                        !nogdb::Expression("name").endWith(nogdb::Bytes("StrEEt")).ignoreCase());
         assertSize(res, 6);
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("name").endWith("Way"));
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("name").endWith(nogdb::Bytes("Way")));
         assertSize(res, 4);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Andy Way");
         assert(res[1].record.get("name").toText() == "Bamboo Way");
         assert(res[2].record.get("name").toText() == "Catalina Way");
         assert(res[3].record.get("name").toText() == "Dwayne Way");
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Condition("coordinates").null());
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, !nogdb::Expression("coordinates").null());
         assertSize(res, 4);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Andrew Street");
@@ -570,13 +570,13 @@ void test_find_edge_all() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("George Street"),
+        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("George Street")),
                                              nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("distance").ge(50.0),
+        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("distance").ge(nogdb::Bytes(50.0)),
                                         nogdb::ClassFilter{"street"});
         assertSize(res, 2);
         std::sort(res.begin(), res.end(), cmp);
@@ -588,14 +588,14 @@ void test_find_edge_all() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("distance").gt(100.0), classNames);
+        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("distance").gt(nogdb::Bytes(100.0)), classNames);
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Gravity Way");
-        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("distance").le(100.0), classNames);
+        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("distance").le(nogdb::Bytes(100.0)), classNames);
         assertSize(res, 5);
     } catch (const nogdb::Error &ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
@@ -603,13 +603,13 @@ void test_find_edge_all() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("capacity").eq(100U));
+        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("capacity").eq(nogdb::Bytes(100U)));
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Doodee Street");
-        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("name").contain("C"));
+        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("name").contain(nogdb::Bytes("C")));
         assertSize(res, 2);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Cowboy Road");
@@ -627,8 +627,8 @@ void test_find_invalid_edge_in() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -640,7 +640,7 @@ void test_find_invalid_edge_in() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                  nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -651,7 +651,7 @@ void test_find_invalid_edge_in() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"), classNames);
+        nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -660,7 +660,7 @@ void test_find_invalid_edge_in() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("names").eq("Andrew Street"),
+        auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("names").eq(nogdb::Bytes("Andrew Street")),
                                               nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -670,7 +670,7 @@ void test_find_invalid_edge_in() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("coordinates").contain("a"),
+        auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("coordinates").contain(nogdb::Bytes("a")),
                                               nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -681,7 +681,7 @@ void test_find_invalid_edge_in() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        nogdb::Vertex::getInEdge(txn, edge.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        nogdb::Vertex::getInEdge(txn, edge.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                  nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -693,7 +693,7 @@ void test_find_invalid_edge_in() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getInEdge(txn, tmp, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getInEdge(txn, tmp, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                             nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -707,8 +707,8 @@ void test_find_invalid_edge_out() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -720,7 +720,7 @@ void test_find_invalid_edge_out() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -731,7 +731,7 @@ void test_find_invalid_edge_out() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"), classNames);
+        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -740,7 +740,7 @@ void test_find_invalid_edge_out() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("names").eq("Andrew Street"),
+        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("names").eq(nogdb::Bytes("Andrew Street")),
                                                nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -750,7 +750,7 @@ void test_find_invalid_edge_out() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("coordinates").contain("a"),
+        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("coordinates").contain(nogdb::Bytes("a")),
                                                nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -761,7 +761,7 @@ void test_find_invalid_edge_out() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getOutEdge(txn, edge.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        auto edges = nogdb::Vertex::getOutEdge(txn, edge.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -773,7 +773,7 @@ void test_find_invalid_edge_out() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getOutEdge(txn, tmp, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getOutEdge(txn, tmp, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                              nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -787,8 +787,8 @@ void test_find_invalid_edge_all() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -800,7 +800,7 @@ void test_find_invalid_edge_all() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -811,7 +811,7 @@ void test_find_invalid_edge_all() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"), classNames);
+        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -820,7 +820,7 @@ void test_find_invalid_edge_all() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("names").eq("Andrew Street"),
+        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("names").eq(nogdb::Bytes("Andrew Street")),
                                                nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -830,7 +830,7 @@ void test_find_invalid_edge_all() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("coordinates").contain("a"),
+        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("coordinates").contain(nogdb::Bytes("a")),
                                                nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -841,7 +841,7 @@ void test_find_invalid_edge_all() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getAllEdge(txn, edge.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        auto edges = nogdb::Vertex::getAllEdge(txn, edge.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -853,7 +853,7 @@ void test_find_invalid_edge_all() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getAllEdge(txn, tmp, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getAllEdge(txn, tmp, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                              nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -865,8 +865,8 @@ void test_find_invalid_edge_all() {
 void test_find_vertex_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").ge(4.5);
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").ge(nogdb::Bytes(4.5));
         auto res = nogdb::Vertex::get(txn, "locations", expr);
         assertSize(res, 3);
         assert(res[0].record.get("name").toText() == "New York Tower");
@@ -878,9 +878,9 @@ void test_find_vertex_with_expression() {
     }
 
     try {
-        auto expr1 = (nogdb::Condition("temperature").gt(0)
-                      and nogdb::Condition("rating").ge(3.0));
-        auto expr2 = nogdb::Condition("population").le(900ULL);
+        auto expr1 = (nogdb::Expression("temperature").gt(nogdb::Bytes(0))
+                      and nogdb::Expression("rating").ge(nogdb::Bytes(3.0)));
+        auto expr2 = nogdb::Expression("population").le(nogdb::Bytes(900ULL));
         auto res = nogdb::Vertex::get(txn, "mountains", expr1);
         auto res2 = nogdb::Vertex::get(txn, "locations", expr1 or expr2);
         res.insert(res.end(), res2.cbegin(), res2.cend());
@@ -896,8 +896,10 @@ void test_find_vertex_with_expression() {
     }
 
     try {
-        auto cond1 = nogdb::Condition("@className").eq("locations") and nogdb::Condition("temperature").lt(12);
-        auto cond2 = nogdb::Condition("@className").eq("mountains") and nogdb::Condition("temperature").gt(0);
+        auto cond1 = nogdb::Expression("@className").eq(nogdb::Bytes("locations"))
+                     and nogdb::Expression("temperature").lt(nogdb::Bytes(12));
+        auto cond2 = nogdb::Expression("@className").eq(nogdb::Bytes("mountains"))
+                     and nogdb::Expression("temperature").gt(nogdb::Bytes(0));
         auto res = nogdb::Vertex::get(txn, "locations", cond1 or cond2);
         auto res2 = nogdb::Vertex::get(txn, "mountains", cond1 or cond2);
         res.insert(res.end(), res2.cbegin(), res2.cend());
@@ -917,8 +919,8 @@ void test_find_vertex_with_expression() {
 void test_find_invalid_vertex_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").ge(4.5);
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").ge(nogdb::Bytes(4.5));
         auto res = nogdb::Vertex::get(txn, "location", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -928,8 +930,8 @@ void test_find_invalid_vertex_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("names").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").ge(4.5);
+        auto expr = nogdb::Expression("names").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").ge(nogdb::Bytes(4.5));
         auto res = nogdb::Vertex::get(txn, "locations", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -939,8 +941,8 @@ void test_find_invalid_vertex_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").contain("a");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").contain(nogdb::Bytes("a"));
         auto res = nogdb::Vertex::get(txn, "locations", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -950,8 +952,8 @@ void test_find_invalid_vertex_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").ge(4.5);
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").ge(nogdb::Bytes(4.5));
         auto res = nogdb::Vertex::get(txn, "street", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -963,10 +965,10 @@ void test_find_invalid_vertex_with_expression() {
 void test_find_edge_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr1 = nogdb::Condition("distance").lt(50.0)
-                     and nogdb::Condition("capacity").ge(300U);
-        auto expr2 = nogdb::Condition("distance").ge(50.0)
-                     and nogdb::Condition("temperature").gt(30);
+        auto expr1 = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                     and nogdb::Expression("capacity").ge(nogdb::Bytes(300U));
+        auto expr2 = nogdb::Expression("distance").ge(nogdb::Bytes(50.0))
+                     and nogdb::Expression("temperature").gt(nogdb::Bytes(30));
         auto classNames = std::set<std::string>{"street", "highway"};
         auto res = nogdb::ResultSet{};
         for (const auto &className: classNames) {
@@ -994,8 +996,8 @@ void test_find_edge_with_expression() {
     }
 
     try {
-        auto cond1 = nogdb::Condition("@className").eq("highway") and nogdb::Condition("name").endWith("B");
-        auto cond2 = nogdb::Condition("@className").eq("railway") and nogdb::Condition("name").beginWith("C");
+        auto cond1 = nogdb::Expression("@className").eq(nogdb::Bytes("highway")) and nogdb::Expression("name").endWith(nogdb::Bytes("B"));
+        auto cond2 = nogdb::Expression("@className").eq(nogdb::Bytes("railway")) and nogdb::Expression("name").beginWith(nogdb::Bytes("C"));
         auto classNames = std::set<std::string>{"street", "highway", "railway"};
         auto res = nogdb::ResultSet{};
         for (const auto &className: classNames) {
@@ -1018,8 +1020,8 @@ void test_find_edge_with_expression() {
 void test_find_invalid_edge_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").lt(50.0)
-                    and nogdb::Condition("capacity").ge(300U);
+        auto expr = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                    and nogdb::Expression("capacity").ge(nogdb::Bytes(300U));
         auto res = nogdb::Edge::get(txn, "streets", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1029,8 +1031,8 @@ void test_find_invalid_edge_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").lt(50.0)
-                    and nogdb::Condition("capacityyy").ge(300U);
+        auto expr = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                    and nogdb::Expression("capacityyy").ge(nogdb::Bytes(300U));
         auto res = nogdb::Edge::get(txn, "street", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1040,8 +1042,8 @@ void test_find_invalid_edge_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").lt(50.0)
-                    and nogdb::Condition("capacity").contain("a");
+        auto expr = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                    and nogdb::Expression("capacity").contain(nogdb::Bytes("a"));
         auto res = nogdb::Edge::get(txn, "street", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1051,8 +1053,8 @@ void test_find_invalid_edge_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").lt(50.0)
-                    and nogdb::Condition("capacity").ge(300U);
+        auto expr = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                    and nogdb::Expression("capacity").ge(nogdb::Bytes(300U));
         auto res = nogdb::Edge::get(txn, "locations", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1068,12 +1070,12 @@ void test_find_edge_in_with_expression() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Dubai Building"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Dubai Building")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto expr = nogdb::Condition("distance").ge(80.0)
-                    or nogdb::Condition("capacity").gt(400U)
-                    or nogdb::Condition("temperature").lt(30);
+        auto expr = nogdb::Expression("distance").ge(nogdb::Bytes(80.0))
+                    or nogdb::Expression("capacity").gt(nogdb::Bytes(400U))
+                    or nogdb::Expression("temperature").lt(nogdb::Bytes(30));
         auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, expr);
         assertSize(res, 3);
         std::sort(res.begin(), res.end(), cmp);
@@ -1101,14 +1103,14 @@ void test_find_edge_out_with_expression() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto expr = nogdb::Condition("name").contain("Road").ignoreCase()
-                    or (nogdb::Condition("temperature").null()
-                        and nogdb::Condition("capacity").ge(2000U))
-                    or (nogdb::Condition("temperature").gt(40)
-                        and nogdb::Condition("distance").lt(140.0));
+        auto expr = nogdb::Expression("name").contain(nogdb::Bytes("Road")).ignoreCase()
+                    or (nogdb::Expression("temperature").null()
+                        and nogdb::Expression("capacity").ge(nogdb::Bytes(2000U)))
+                    or (nogdb::Expression("temperature").gt(nogdb::Bytes(40))
+                        and nogdb::Expression("distance").lt(nogdb::Bytes(140.0)));
         auto res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Henry Road");
@@ -1142,12 +1144,12 @@ void test_find_edge_all_with_expression() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto expr = nogdb::Condition("temperature")
-                    and nogdb::Condition("capacity")
-                    and nogdb::Condition("distance").gt(40.0);
+        auto expr = nogdb::Expression("temperature")
+                    and nogdb::Expression("capacity")
+                    and nogdb::Expression("distance").gt(nogdb::Bytes(40.0));
         auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assertSize(res, 2);
         std::sort(res.begin(), res.end(), cmp);
@@ -1166,12 +1168,12 @@ void test_find_edge_all_with_expression() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
         auto cond1 =
-                nogdb::Condition("@className").eq("street") and nogdb::Condition("name").contain("street").ignoreCase();
-        auto cond2 = nogdb::Condition("@className").eq("highway") and nogdb::Condition("name").endWith("C");
+                nogdb::Expression("@className").eq(nogdb::Bytes("street")) and nogdb::Expression("name").contain(nogdb::Bytes("street")).ignoreCase();
+        auto cond2 = nogdb::Expression("@className").eq(nogdb::Bytes("highway")) and nogdb::Expression("name").endWith(nogdb::Bytes("C"));
         auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, cond1 or cond2);
         assertSize(res, 3);
         for (const auto &r: res) {
@@ -1192,8 +1194,8 @@ void test_find_invalid_edge_in_with_expression() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -1205,7 +1207,7 @@ void test_find_invalid_edge_in_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1215,7 +1217,7 @@ void test_find_invalid_edge_in_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
         auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, expr, classNames);
         assert(false);
@@ -1226,7 +1228,7 @@ void test_find_invalid_edge_in_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("names").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("names").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1236,7 +1238,7 @@ void test_find_invalid_edge_in_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").contain("a");
+        auto expr = nogdb::Expression("distance").contain(nogdb::Bytes("a"));
         auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1247,7 +1249,7 @@ void test_find_invalid_edge_in_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getInEdge(txn, edge.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1259,7 +1261,7 @@ void test_find_invalid_edge_in_with_expression() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto res = nogdb::Vertex::getInEdge(txn, tmp, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1273,8 +1275,8 @@ void test_find_invalid_edge_out_with_expression() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -1286,7 +1288,7 @@ void test_find_invalid_edge_out_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1296,7 +1298,7 @@ void test_find_invalid_edge_out_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
         auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, expr, classNames);
         assert(false);
@@ -1307,7 +1309,7 @@ void test_find_invalid_edge_out_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("names").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("names").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1317,7 +1319,7 @@ void test_find_invalid_edge_out_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").contain("a");
+        auto expr = nogdb::Expression("distance").contain(nogdb::Bytes("a"));
         auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1328,7 +1330,7 @@ void test_find_invalid_edge_out_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getOutEdge(txn, edge.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1340,7 +1342,7 @@ void test_find_invalid_edge_out_with_expression() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto res = nogdb::Vertex::getOutEdge(txn, tmp, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1354,8 +1356,8 @@ void test_find_invalid_edge_all_with_expression() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -1367,7 +1369,7 @@ void test_find_invalid_edge_all_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1377,7 +1379,7 @@ void test_find_invalid_edge_all_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
         auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, expr, classNames);
         assert(false);
@@ -1388,7 +1390,7 @@ void test_find_invalid_edge_all_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("names").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("names").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1398,7 +1400,7 @@ void test_find_invalid_edge_all_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").contain("a");
+        auto expr = nogdb::Expression("distance").contain(nogdb::Bytes("a"));
         auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1409,7 +1411,7 @@ void test_find_invalid_edge_all_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getAllEdge(txn, edge.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1421,7 +1423,7 @@ void test_find_invalid_edge_all_with_expression() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto res = nogdb::Vertex::getAllEdge(txn, tmp, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -1433,10 +1435,10 @@ void test_find_invalid_edge_all_with_expression() {
 void test_find_vertex_condition_function() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "locations", [](const nogdb::Record &record) {
+        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Expression([](const nogdb::Record &record) {
             return record.get("name").toText().find("Building") != std::string::npos ||
                    (!record.get("rating").empty() && record.get("rating").toReal() >= 4.5);
-        });
+        }));
         assertSize(res, 3);
         assert(res[0].record.get("name").toText() == "New York Tower");
         assert(res[1].record.get("name").toText() == "Dubai Building");
@@ -1452,8 +1454,8 @@ void test_find_vertex_condition_function() {
                     (!record.get("rating").empty() && record.get("rating").toReal() >= 3.0)) ||
                    (!record.get("population").empty() && record.get("population").toBigIntU() <= 900ULL);
         };
-        auto res = nogdb::Vertex::get(txn, "mountains", cmp);
-        auto res2 = nogdb::Vertex::get(txn, "locations", cmp);
+        auto res = nogdb::Vertex::get(txn, "mountains", nogdb::Expression(cmp));
+        auto res2 = nogdb::Vertex::get(txn, "locations", nogdb::Expression(cmp));
         res.insert(res.end(), res2.cbegin(), res2.cend());
         assertSize(res, 5);
         assert(res[0].record.get("name").toText() == "Blue Mountain");
@@ -1475,8 +1477,8 @@ void test_find_vertex_condition_function() {
                 return false;
             }
         };
-        auto res = nogdb::Vertex::get(txn, "locations", cmp);
-        auto res2 = nogdb::Vertex::get(txn, "mountains", cmp);
+        auto res = nogdb::Vertex::get(txn, "locations", nogdb::Expression(cmp));
+        auto res2 = nogdb::Vertex::get(txn, "mountains", nogdb::Expression(cmp));
         res.insert(res.end(), res2.cbegin(), res2.cend());
         assertSize(res, 2);
         for (const auto &r: res) {
@@ -1499,7 +1501,7 @@ void test_find_edge_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::get(txn, "street", test_condition_function_1);
+        auto res = nogdb::Edge::get(txn, "street", nogdb::Expression(test_condition_function_1));
         assertSize(res, 1);
         auto tmp = Coordinates{};
         res[0].record.get("coordinates").convertTo(tmp);
@@ -1535,13 +1537,13 @@ void test_find_edge_in_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Dubai Building"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Dubai Building")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("George Street"),
+        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("George Street")),
                                             nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, test_condition_function_4, nogdb::ClassFilter{"street"});
+        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression(test_condition_function_4), nogdb::ClassFilter{"street"});
         assertSize(res, 2);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Andrew Street");
@@ -1552,13 +1554,13 @@ void test_find_edge_in_condition_function() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Isaac Street"), classNames);
+        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Isaac Street")), classNames);
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, test_condition_function_5, classNames);
+        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression(test_condition_function_5), classNames);
         assertSize(res, 3);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Dwayne Way");
@@ -1570,12 +1572,12 @@ void test_find_edge_in_condition_function() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("The Outer Ring C"));
+        auto res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("The Outer Ring C")));
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, test_condition_function_6);
+        res = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression(test_condition_function_6));
         assertSize(res, 3);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Eastern Way");
@@ -1611,26 +1613,26 @@ void test_find_edge_out_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                              nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, test_condition_function_7,
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression(test_condition_function_7),
                                         nogdb::ClassFilter{"railway"});
         assertSize(res, 3);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Bamboo Way");
         assert(res[1].record.get("name").toText() == "Catalina Way");
         assert(res[2].record.get("name").toText() == "Dwayne Way");
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, test_condition_function_8,
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression(test_condition_function_8),
                                         nogdb::ClassFilter{"railway"});
         assertSize(res, 2);
         std::sort(res.begin(), res.end(), cmp);
         assert(res[0].record.get("name").toText() == "Andy Way");
         assert(res[1].record.get("name").toText() == "Catalina Way");
-        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, test_condition_function_9,
+        res = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression(test_condition_function_9),
                                         nogdb::ClassFilter{"railway"});
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Dwayne Way");
@@ -1659,13 +1661,13 @@ void test_find_edge_all_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
-        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("name").eq("George Street"),
+        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("George Street")),
                                              nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Condition("distance").ge(50.0),
+        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression("distance").ge(nogdb::Bytes(50.0)),
                                         nogdb::ClassFilter{"street"});
         assertSize(res, 2);
         std::sort(res.begin(), res.end(), cmp);
@@ -1677,14 +1679,14 @@ void test_find_edge_all_condition_function() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         auto &vertex = vertices[0];
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, test_condition_function_10, classNames);
+        auto res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression(test_condition_function_10), classNames);
         assertSize(res, 1);
         assert(res[0].record.get("name").toText() == "Gravity Way");
-        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, test_condition_function_11, classNames);
+        res = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression(test_condition_function_11), classNames);
         assertSize(res, 5);
     } catch (const nogdb::Error &ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
@@ -1702,7 +1704,7 @@ void test_find_invalid_vertex_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "location", condition);
+        auto res = nogdb::Vertex::get(txn, "location", nogdb::Expression(condition));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1711,7 +1713,7 @@ void test_find_invalid_vertex_condition_function() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "street", condition);
+        auto res = nogdb::Vertex::get(txn, "street", nogdb::Expression(condition));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1722,9 +1724,9 @@ void test_find_invalid_vertex_condition_function() {
 void test_find_invalid_edge_condition_function() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::get(txn, "streets", [](const nogdb::Record &record) {
+        auto res = nogdb::Edge::get(txn, "streets", nogdb::Expression([](const nogdb::Record &record) {
             return record.get("distance").toReal() < 50.0 && record.get("capacity").toIntU() >= 300U;
-        });
+        }));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1733,9 +1735,9 @@ void test_find_invalid_edge_condition_function() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::get(txn, "locations", [](const nogdb::Record &record) {
+        auto res = nogdb::Edge::get(txn, "locations", nogdb::Expression([](const nogdb::Record &record) {
             return record.get("distance").toReal() < 50.0 && record.get("capacity").toIntU() >= 300U;
-        });
+        }));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1748,8 +1750,8 @@ void test_find_invalid_edge_in_condition_function() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -1766,7 +1768,7 @@ void test_find_invalid_edge_in_condition_function() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, condition, nogdb::ClassFilter{"streets"});
+        auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1776,7 +1778,7 @@ void test_find_invalid_edge_in_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, condition, classNames);
+        auto edges = nogdb::Vertex::getInEdge(txn, vertex.descriptor, nogdb::Expression(condition), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1786,7 +1788,7 @@ void test_find_invalid_edge_in_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getInEdge(txn, edge.descriptor, condition, nogdb::ClassFilter{"street"});
+        auto edges = nogdb::Vertex::getInEdge(txn, edge.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1797,7 +1799,7 @@ void test_find_invalid_edge_in_condition_function() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getInEdge(txn, tmp, condition, nogdb::ClassFilter{"street"});
+        auto res = nogdb::Vertex::getInEdge(txn, tmp, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1810,8 +1812,8 @@ void test_find_invalid_edge_out_condition_function() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -1828,7 +1830,7 @@ void test_find_invalid_edge_out_condition_function() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, condition, nogdb::ClassFilter{"streets"});
+        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1838,7 +1840,7 @@ void test_find_invalid_edge_out_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, condition, classNames);
+        auto edges = nogdb::Vertex::getOutEdge(txn, vertex.descriptor, nogdb::Expression(condition), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1848,7 +1850,7 @@ void test_find_invalid_edge_out_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getOutEdge(txn, edge.descriptor, condition, nogdb::ClassFilter{"street"});
+        auto edges = nogdb::Vertex::getOutEdge(txn, edge.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1859,7 +1861,7 @@ void test_find_invalid_edge_out_condition_function() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getOutEdge(txn, tmp, condition, nogdb::ClassFilter{"street"});
+        auto res = nogdb::Vertex::getOutEdge(txn, tmp, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1872,8 +1874,8 @@ void test_find_invalid_edge_all_condition_function() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -1889,7 +1891,7 @@ void test_find_invalid_edge_all_condition_function() {
     };
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, condition, nogdb::ClassFilter{"streets"});
+        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1899,7 +1901,7 @@ void test_find_invalid_edge_all_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, condition, classNames);
+        auto edges = nogdb::Vertex::getAllEdge(txn, vertex.descriptor, nogdb::Expression(condition), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1909,7 +1911,7 @@ void test_find_invalid_edge_all_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getAllEdge(txn, edge.descriptor, condition, nogdb::ClassFilter{"street"});
+        auto edges = nogdb::Vertex::getAllEdge(txn, edge.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1920,7 +1922,7 @@ void test_find_invalid_edge_all_condition_function() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getAllEdge(txn, tmp, condition, nogdb::ClassFilter{"street"});
+        auto res = nogdb::Vertex::getAllEdge(txn, tmp, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -1931,34 +1933,34 @@ void test_find_invalid_edge_all_condition_function() {
 void test_find_vertex_cursor() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assertSize(res, 1);
         auto tmp = Coordinates{};
         res.first();
         res->record.get("coordinates").convertTo(tmp);
         assert(tmp.x == -1.00);
         assert(tmp.y == 1.00);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Tokyo Tower"));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Tokyo Tower")));
         assertSize(res, 0);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("temperature").eq(18));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("temperature").eq(nogdb::Bytes(18)));
         assertSize(res, 1);
         res.first();
         assert(res->record.get("name").toText() == "Pentagon");
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("postcode").eq(11600U));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("postcode").eq(nogdb::Bytes(11600U)));
         assertSize(res, 1);
         res.first();
         assert(res->record.get("name").toText() == "ThaiCC Tower");
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("price").eq(280000LL));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("price").eq(nogdb::Bytes(280000LL)));
         assertSize(res, 1);
         res.first();
         assert(res->record.get("name").toText() == "Dubai Building");
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("population").eq(900ULL));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("population").eq(nogdb::Bytes(900ULL)));
         assertSize(res, 2);
         res.next();
         assert(res->record.get("name").toText() == "ThaiCC Tower");
         res.next();
         assert(res->record.get("name").toText() == "Pentagon");
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("rating").eq(4.5));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("rating").eq(nogdb::Bytes(4.5)));
         assertSize(res, 2);
         res.next();
         assert(res->record.get("name").toText() == "New York Tower");
@@ -1970,26 +1972,26 @@ void test_find_vertex_cursor() {
     }
 
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "locations", !nogdb::Condition("name").eq("Pentagon"));
+        auto res = nogdb::Vertex::getCursor(txn, "locations", !nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assertSize(res, 4);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("temperature").gt(35));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("temperature").gt(nogdb::Bytes(35)));
         assertSize(res, 1);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("rating").ge(4.5));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("rating").ge(nogdb::Bytes(4.5)));
         assertSize(res, 3);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("postcode").lt(10300U));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("postcode").lt(nogdb::Bytes(10300U)));
         assertSize(res, 2);
-        nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("population").le(900ULL));
+        nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("population").le(nogdb::Bytes(900ULL)));
         assertSize(res, 2);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("price").null());
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("price").null());
         assertSize(res, 1);
         res.last();
         assert(res->record.get("name").toText() == "ThaiCC Tower");
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("temperature"));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("temperature"));
         assertSize(res, 4);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq(100));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes(100)));
         assertSize(res, 0);
         res = nogdb::Vertex::getCursor(txn, "locations",
-                                       nogdb::Condition("population").eq(static_cast<unsigned long long>(2000)));
+                                       nogdb::Expression("population").eq(nogdb::Bytes(static_cast<unsigned long long>(2000))));
         assertSize(res, 1);
         res.last();
         assert(res->record.get("name").toText() == "New York Tower");
@@ -1999,29 +2001,29 @@ void test_find_vertex_cursor() {
     }
 
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").contain("tag").ignoreCase());
+        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").contain(nogdb::Bytes("tag")).ignoreCase());
         assertSize(res, 1);
         res.to(0);
         assert(res->record.get("name").toText() == "Pentagon");
-        res = nogdb::Vertex::getCursor(txn, "locations", !nogdb::Condition("name").contain("u").ignoreCase());
+        res = nogdb::Vertex::getCursor(txn, "locations", !nogdb::Expression("name").contain(nogdb::Bytes("u")).ignoreCase());
         assertSize(res, 3);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").beginWith("thai").ignoreCase());
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").beginWith(nogdb::Bytes("thai")).ignoreCase());
         assertSize(res, 1);
         res.to(0);
         assert(res->record.get("name").toText() == "ThaiCC Tower");
-        res = nogdb::Vertex::getCursor(txn, "locations", !nogdb::Condition("name").beginWith("Thai"));
+        res = nogdb::Vertex::getCursor(txn, "locations", !nogdb::Expression("name").beginWith(nogdb::Bytes("Thai")));
         assertSize(res, 4);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").endWith("TOWER").ignoreCase());
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").endWith(nogdb::Bytes("TOWER")).ignoreCase());
         assertSize(res, 2);
-        res = nogdb::Vertex::getCursor(txn, "locations", !nogdb::Condition("name").endWith("Building"));
+        res = nogdb::Vertex::getCursor(txn, "locations", !nogdb::Expression("name").endWith(nogdb::Bytes("Building")));
         assertSize(res, 3);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").gt("Pentagon"));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").gt(nogdb::Bytes("Pentagon")));
         assertSize(res, 1);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").ge("Pentagon"));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").ge(nogdb::Bytes("Pentagon")));
         assertSize(res, 2);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").lt("Pentagon"));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").lt(nogdb::Bytes("Pentagon")));
         assertSize(res, 3);
-        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").le("Pentagon"));
+        res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").le(nogdb::Bytes("Pentagon")));
         assertSize(res, 4);
     } catch (const nogdb::Error &ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
@@ -2034,7 +2036,7 @@ void test_find_vertex_cursor() {
 void test_find_invalid_vertex_cursor() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "location", nogdb::Condition("name"));
+        auto res = nogdb::Vertex::getCursor(txn, "location", nogdb::Expression("name"));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2043,7 +2045,7 @@ void test_find_invalid_vertex_cursor() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("names"));
+        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("names"));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2052,7 +2054,7 @@ void test_find_invalid_vertex_cursor() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("coordinates").contain("a"));
+        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("coordinates").contain(nogdb::Bytes("a")));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2061,7 +2063,7 @@ void test_find_invalid_vertex_cursor() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        auto res = nogdb::Vertex::getCursor(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2072,7 +2074,7 @@ void test_find_invalid_vertex_cursor() {
 void test_find_edge_cursor() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::getCursor(txn, "street", nogdb::Condition("name").eq("George Street"));
+        auto res = nogdb::Edge::getCursor(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("George Street")));
         assertSize(res, 1);
         auto tmp = Coordinates{};
         res.first();
@@ -2089,7 +2091,7 @@ void test_find_edge_cursor() {
 void test_find_invalid_edge_cursor() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::getCursor(txn, "streets", nogdb::Condition("name"));
+        auto res = nogdb::Edge::getCursor(txn, "streets", nogdb::Expression("name"));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2098,7 +2100,7 @@ void test_find_invalid_edge_cursor() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::getCursor(txn, "railway", nogdb::Condition("names"));
+        auto res = nogdb::Edge::getCursor(txn, "railway", nogdb::Expression("names"));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2107,7 +2109,7 @@ void test_find_invalid_edge_cursor() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::getCursor(txn, "highway", nogdb::Condition("coordinates").contain("a"));
+        auto res = nogdb::Edge::getCursor(txn, "highway", nogdb::Expression("coordinates").contain(nogdb::Bytes("a")));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2116,7 +2118,7 @@ void test_find_invalid_edge_cursor() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::getCursor(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto res = nogdb::Edge::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2127,10 +2129,10 @@ void test_find_invalid_edge_cursor() {
 void test_find_vertex_cursor_condition_function() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "locations", [](const nogdb::Record &record) {
+        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression([](const nogdb::Record &record) {
             return record.get("name").toText().find("Building") != std::string::npos ||
                    (!record.get("rating").empty() && record.get("rating").toReal() >= 4.5);
-        });
+        }));
         assertSize(res, 3);
         res.next();
         assert(res->record.get("name").toText() == "New York Tower");
@@ -2149,7 +2151,7 @@ void test_find_vertex_cursor_condition_function() {
                     (!record.get("rating").empty() && record.get("rating").toReal() >= 3.0)) ||
                    (!record.get("population").empty() && record.get("population").toBigIntU() <= 900ULL);
         };
-        auto res = nogdb::Vertex::getCursor(txn, "locations", cmp);
+        auto res = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression(cmp));
         assertSize(res, 4);
         res.first();
         assert(res->record.get("name").toText() == "New York Tower");
@@ -2175,7 +2177,7 @@ void test_find_edge_cursor_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::getCursor(txn, "street", test_condition_function_1);
+        auto res = nogdb::Edge::getCursor(txn, "street", nogdb::Expression(test_condition_function_1));
         assertSize(res, 1);
         auto tmp = Coordinates{};
         res.next();
@@ -2198,7 +2200,7 @@ void test_find_invalid_vertex_cursor_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "location", condition);
+        auto res = nogdb::Vertex::getCursor(txn, "location", nogdb::Expression(condition));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2207,7 +2209,7 @@ void test_find_invalid_vertex_cursor_condition_function() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::getCursor(txn, "street", condition);
+        auto res = nogdb::Vertex::getCursor(txn, "street", nogdb::Expression(condition));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2218,9 +2220,9 @@ void test_find_invalid_vertex_cursor_condition_function() {
 void test_find_invalid_edge_cursor_condition_function() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::getCursor(txn, "streets", [](const nogdb::Record &record) {
+        auto res = nogdb::Edge::getCursor(txn, "streets", nogdb::Expression([](const nogdb::Record &record) {
             return record.get("distance").toReal() < 50.0 && record.get("capacity").toIntU() >= 300U;
-        });
+        }));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2229,9 +2231,9 @@ void test_find_invalid_edge_cursor_condition_function() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Edge::getCursor(txn, "locations", [](const nogdb::Record &record) {
+        auto res = nogdb::Edge::getCursor(txn, "locations", nogdb::Expression([](const nogdb::Record &record) {
             return record.get("distance").toReal() < 50.0 && record.get("capacity").toIntU() >= 300U;
-        });
+        }));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2242,8 +2244,8 @@ void test_find_invalid_edge_cursor_condition_function() {
 void test_find_vertex_cursor_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").ge(4.5);
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").ge(nogdb::Bytes(4.5));
         auto res = nogdb::Vertex::getCursor(txn, "locations", expr);
         assertSize(res, 3);
         res.next();
@@ -2258,9 +2260,9 @@ void test_find_vertex_cursor_with_expression() {
     }
 
     try {
-        auto expr1 = (nogdb::Condition("temperature").gt(0)
-                      and nogdb::Condition("rating").ge(3.0));
-        auto expr2 = nogdb::Condition("population").le(900ULL);
+        auto expr1 = (nogdb::Expression("temperature").gt(nogdb::Bytes(0))
+                      and nogdb::Expression("rating").ge(nogdb::Bytes(3.0)));
+        auto expr2 = nogdb::Expression("population").le(nogdb::Bytes(900ULL));
         auto res = nogdb::Vertex::getCursor(txn, "locations", expr1 or expr2);
         assertSize(res, 4);
         res.first();
@@ -2282,8 +2284,8 @@ void test_find_vertex_cursor_with_expression() {
 void test_find_invalid_vertex_cursor_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").ge(4.5);
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").ge(nogdb::Bytes(4.5));
         auto res = nogdb::Vertex::getCursor(txn, "location", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2293,8 +2295,8 @@ void test_find_invalid_vertex_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("names").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").ge(4.5);
+        auto expr = nogdb::Expression("names").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").ge(nogdb::Bytes(4.5));
         auto res = nogdb::Vertex::getCursor(txn, "locations", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2304,8 +2306,8 @@ void test_find_invalid_vertex_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").contain("a");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").contain(nogdb::Bytes("a"));
         auto res = nogdb::Vertex::getCursor(txn, "locations", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2315,8 +2317,8 @@ void test_find_invalid_vertex_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Building").ignoreCase()
-                    or nogdb::Condition("rating").ge(4.5);
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Building")).ignoreCase()
+                    or nogdb::Expression("rating").ge(nogdb::Bytes(4.5));
         auto res = nogdb::Vertex::getCursor(txn, "street", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2328,10 +2330,10 @@ void test_find_invalid_vertex_cursor_with_expression() {
 void test_find_edge_cursor_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr1 = nogdb::Condition("distance").lt(50.0)
-                     and nogdb::Condition("capacity").ge(300U);
-        auto expr2 = nogdb::Condition("distance").ge(50.0)
-                     and nogdb::Condition("temperature").gt(30);
+        auto expr1 = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                     and nogdb::Expression("capacity").ge(nogdb::Bytes(300U));
+        auto expr2 = nogdb::Expression("distance").ge(nogdb::Bytes(50.0))
+                     and nogdb::Expression("temperature").gt(nogdb::Bytes(30));
         auto res = nogdb::Edge::getCursor(txn, "street", expr1 or expr2);
         assertSize(res, 5);
         auto elements = std::vector<std::string>{"George Street",
@@ -2351,8 +2353,8 @@ void test_find_edge_cursor_with_expression() {
 void test_find_invalid_edge_cursor_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").lt(50.0)
-                    and nogdb::Condition("capacity").ge(300U);
+        auto expr = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                    and nogdb::Expression("capacity").ge(nogdb::Bytes(300U));
         auto res = nogdb::Edge::getCursor(txn, "streets", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2362,8 +2364,8 @@ void test_find_invalid_edge_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").lt(50.0)
-                    and nogdb::Condition("capacityyy").ge(300U);
+        auto expr = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                    and nogdb::Expression("capacityyy").ge(nogdb::Bytes(300U));
         auto res = nogdb::Edge::getCursor(txn, "street", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2373,8 +2375,8 @@ void test_find_invalid_edge_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").lt(50.0)
-                    and nogdb::Condition("capacity").contain("a");
+        auto expr = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                    and nogdb::Expression("capacity").contain(nogdb::Bytes("a"));
         auto res = nogdb::Edge::getCursor(txn, "street", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2384,8 +2386,8 @@ void test_find_invalid_edge_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").lt(50.0)
-                    and nogdb::Condition("capacity").ge(300U);
+        auto expr = nogdb::Expression("distance").lt(nogdb::Bytes(50.0))
+                    and nogdb::Expression("capacity").ge(nogdb::Bytes(300U));
         auto res = nogdb::Edge::getCursor(txn, "locations", expr);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2397,14 +2399,14 @@ void test_find_invalid_edge_cursor_with_expression() {
 void test_find_edge_in_cursor() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Dubai Building"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Dubai Building")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Condition("name").eq("George Street"),
+        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("George Street")),
                                                   nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Condition("distance").gt(40.0),
+        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression("distance").gt(nogdb::Bytes(40.0)),
                                              nogdb::ClassFilter{"street"});
         assert(res.count() == 2);
         cursorContains(res, std::set<std::string>{"Andrew Street", "George Street"}, "name");
@@ -2414,14 +2416,14 @@ void test_find_edge_in_cursor() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Condition("name").eq("Isaac Street"), classNames);
+        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("Isaac Street")), classNames);
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Condition("distance").lt(200.0), classNames);
+        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression("distance").lt(nogdb::Bytes(200.0)), classNames);
         assert(res.count() == 3);
         cursorContains(res, std::set<std::string>{"Dwayne Way", "Henry Road", "Isaac Street"}, "name");
     } catch (const nogdb::Error &ex) {
@@ -2430,13 +2432,13 @@ void test_find_edge_in_cursor() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         vertices.first();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Condition("name").eq("The Outer Ring C"));
+        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("The Outer Ring C")));
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Condition("distance").ge(36.2));
+        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression("distance").ge(nogdb::Bytes(36.2)));
         assert(res.count() == 3);
         cursorContains(res, std::set<std::string>{"Eastern Way", "Fisher Avenue", "The Outer Ring C"}, "name");
     } catch (const nogdb::Error &ex) {
@@ -2450,22 +2452,22 @@ void test_find_edge_in_cursor() {
 void test_find_edge_out_cursor() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                    nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Condition("distance").ge(100.0),
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression("distance").ge(nogdb::Bytes(100.0)),
                                               nogdb::ClassFilter{"railway"});
         assertSize(res, 3);
         cursorContains(res, std::set<std::string>{"Bamboo Way", "Catalina Way", "Dwayne Way"}, "name");
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Condition("temperature").le(42),
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression("temperature").le(nogdb::Bytes(42)),
                                               nogdb::ClassFilter{"railway"});
         assertSize(res, 2);
         cursorContains(res, std::set<std::string>{"Andy Way", "Catalina Way"}, "name");
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Condition("temperature"),
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Expression("temperature"),
                                               nogdb::ClassFilter{"railway"});
         assertSize(res, 1);
         cursorContains(res, std::set<std::string>{"Dwayne Way"}, "name");
@@ -2475,21 +2477,21 @@ void test_find_edge_out_cursor() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Condition("name").eq("Andrew Street"), classNames);
+        auto res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")), classNames);
         assertSize(res, 5);
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Condition("name").contain("boo"), classNames);
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Expression("name").contain(nogdb::Bytes("boo")), classNames);
         assertSize(res, 5);
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Condition("name").contain("BOO").ignoreCase(), classNames);
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression("name").contain(nogdb::Bytes("BOO")).ignoreCase(), classNames);
         assertSize(res, 1);
         cursorContains(res, std::set<std::string>{"Bamboo Way"}, "name");
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Condition("name").beginWith("a").ignoreCase(), classNames);
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Expression("name").beginWith(nogdb::Bytes("a")).ignoreCase(), classNames);
         assertSize(res, 4);
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Condition("name").beginWith("A"), classNames);
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression("name").beginWith(nogdb::Bytes("A")), classNames);
         assertSize(res, 2);
     } catch (const nogdb::Error &ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
@@ -2497,18 +2499,18 @@ void test_find_edge_out_cursor() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Condition("name").eq("The Outer Ring B"));
+        auto res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("The Outer Ring B")));
         assertSize(res, 1);
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Condition("name").endWith("StrEEt").ignoreCase());
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Expression("name").endWith(nogdb::Bytes("StrEEt")).ignoreCase());
         assertSize(res, 6);
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Condition("name").endWith("Way"));
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression("name").endWith(nogdb::Bytes("Way")));
         assertSize(res, 4);
         cursorContains(res, std::set<std::string>{"Andy Way", "Bamboo Way", "Catalina Way", "Dwayne Way"}, "name");
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Condition("coordinates").null());
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, !nogdb::Expression("coordinates").null());
         assertSize(res, 4);
         cursorContains(res, std::set<std::string>{"Andrew Street", "Andy Way", "Bamboo Way", "The Outer Ring B"},
                        "name");
@@ -2523,14 +2525,14 @@ void test_find_edge_out_cursor() {
 void test_find_edge_all_cursor() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Condition("name").eq("George Street"),
+        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("George Street")),
                                                    nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Condition("distance").ge(50.0),
+        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression("distance").ge(nogdb::Bytes(50.0)),
                                               nogdb::ClassFilter{"street"});
         assertSize(res, 2);
         cursorContains(res, std::set<std::string>{"Henry Road", "Jetty Road"}, "name");
@@ -2540,16 +2542,16 @@ void test_find_edge_all_cursor() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Condition("distance").gt(100.0), classNames);
+        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression("distance").gt(nogdb::Bytes(100.0)), classNames);
         assertSize(res, 1);
         res.next();
         assert(res->record.get("name").toText() == "Gravity Way");
-        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Condition("distance").le(100.0), classNames);
+        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression("distance").le(nogdb::Bytes(100.0)), classNames);
         assertSize(res, 5);
     } catch (const nogdb::Error &ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
@@ -2557,15 +2559,15 @@ void test_find_edge_all_cursor() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Condition("capacity").eq(100U));
+        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression("capacity").eq(nogdb::Bytes(100U)));
         assertSize(res, 1);
         res.first();
         assert(res->record.get("name").toText() == "Doodee Street");
-        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Condition("name").contain("C"));
+        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression("name").contain(nogdb::Bytes("C")));
         assertSize(res, 2);
         cursorContains(res, std::set<std::string>{"Cowboy Road", "The Outer Ring C"}, "name");
     } catch (const nogdb::Error &ex) {
@@ -2581,8 +2583,8 @@ void test_find_invalid_edge_in_cursor() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -2594,7 +2596,7 @@ void test_find_invalid_edge_in_cursor() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                        nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2605,7 +2607,7 @@ void test_find_invalid_edge_in_cursor() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                        classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2616,7 +2618,7 @@ void test_find_invalid_edge_in_cursor() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor,
-                                                    nogdb::Condition("names").eq("Andrew Street"),
+                                                    nogdb::Expression("names").eq(nogdb::Bytes("Andrew Street")),
                                                     nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2626,7 +2628,7 @@ void test_find_invalid_edge_in_cursor() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, nogdb::Condition("distance").contain("a"),
+        auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, nogdb::Expression("distance").contain(nogdb::Bytes("a")),
                                                     nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2637,7 +2639,7 @@ void test_find_invalid_edge_in_cursor() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        nogdb::Vertex::getInEdgeCursor(txn, edge.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        nogdb::Vertex::getInEdgeCursor(txn, edge.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                        nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2649,7 +2651,7 @@ void test_find_invalid_edge_in_cursor() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getInEdgeCursor(txn, tmp, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getInEdgeCursor(txn, tmp, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                   nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2663,8 +2665,8 @@ void test_find_invalid_edge_out_cursor() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -2677,7 +2679,7 @@ void test_find_invalid_edge_out_cursor() {
     auto &vertex = vertices[0];
     try {
         auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor,
-                                                     nogdb::Condition("name").eq("Andrew Street"),
+                                                     nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                      nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2689,7 +2691,7 @@ void test_find_invalid_edge_out_cursor() {
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
         auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor,
-                                                     nogdb::Condition("name").eq("Andrew Street"), classNames);
+                                                     nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2699,7 +2701,7 @@ void test_find_invalid_edge_out_cursor() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor,
-                                                     nogdb::Condition("names").eq("Andrew Street"),
+                                                     nogdb::Expression("names").eq(nogdb::Bytes("Andrew Street")),
                                                      nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2709,7 +2711,7 @@ void test_find_invalid_edge_out_cursor() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, nogdb::Condition("distance").contain("a"),
+        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, nogdb::Expression("distance").contain(nogdb::Bytes("a")),
                                                      nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2720,7 +2722,7 @@ void test_find_invalid_edge_out_cursor() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, edge.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, edge.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                      nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2732,7 +2734,7 @@ void test_find_invalid_edge_out_cursor() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getOutEdgeCursor(txn, tmp, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getOutEdgeCursor(txn, tmp, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                    nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2746,8 +2748,8 @@ void test_find_invalid_edge_all_cursor() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -2760,7 +2762,7 @@ void test_find_invalid_edge_all_cursor() {
     auto &vertex = vertices[0];
     try {
         auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor,
-                                                     nogdb::Condition("name").eq("Andrew Street"),
+                                                     nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                      nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2772,7 +2774,7 @@ void test_find_invalid_edge_all_cursor() {
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
         auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor,
-                                                     nogdb::Condition("name").eq("Andrew Street"), classNames);
+                                                     nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -2782,7 +2784,7 @@ void test_find_invalid_edge_all_cursor() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor,
-                                                     nogdb::Condition("names").eq("Andrew Street"),
+                                                     nogdb::Expression("names").eq(nogdb::Bytes("Andrew Street")),
                                                      nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2792,7 +2794,7 @@ void test_find_invalid_edge_all_cursor() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, nogdb::Condition("distance").contain("a"),
+        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, nogdb::Expression("distance").contain(nogdb::Bytes("a")),
                                                      nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2803,7 +2805,7 @@ void test_find_invalid_edge_all_cursor() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, edge.descriptor, nogdb::Condition("name").eq("Andrew Street"),
+        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, edge.descriptor, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                      nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2815,7 +2817,7 @@ void test_find_invalid_edge_all_cursor() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getAllEdgeCursor(txn, tmp, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getAllEdgeCursor(txn, tmp, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                    nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -2842,14 +2844,14 @@ void test_find_edge_in_cursor_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Dubai Building"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Dubai Building")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Condition("name").eq("George Street"),
+        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("George Street")),
                                                   nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, test_condition_function_4, nogdb::ClassFilter{"street"});
+        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression(test_condition_function_4), nogdb::ClassFilter{"street"});
         assertSize(res, 2);
         cursorContains(res, std::set<std::string>{"Andrew Street", "George Street"}, "name");
     } catch (const nogdb::Error &ex) {
@@ -2858,14 +2860,14 @@ void test_find_edge_in_cursor_condition_function() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Condition("name").eq("Isaac Street"), classNames);
+        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("Isaac Street")), classNames);
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, test_condition_function_5, classNames);
+        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression(test_condition_function_5), classNames);
         assertSize(res, 3);
         cursorContains(res, std::set<std::string>{"Dwayne Way", "Henry Road", "Isaac Street"}, "name");
     } catch (const nogdb::Error &ex) {
@@ -2874,13 +2876,13 @@ void test_find_edge_in_cursor_condition_function() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Condition("name").eq("The Outer Ring C"));
+        auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("The Outer Ring C")));
         assertSize(res, 1);
-        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, test_condition_function_6);
+        res = nogdb::Vertex::getInEdgeCursor(txn, vertex, nogdb::Expression(test_condition_function_6));
         assertSize(res, 3);
         cursorContains(res, std::set<std::string>{"Eastern Way", "Fisher Avenue", "The Outer Ring C"}, "name");
     } catch (const nogdb::Error &ex) {
@@ -2909,20 +2911,20 @@ void test_find_edge_out_cursor_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Condition("name").eq("Andrew Street"),
+        auto res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")),
                                                    nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, test_condition_function_7, nogdb::ClassFilter{"railway"});
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression(test_condition_function_7), nogdb::ClassFilter{"railway"});
         assertSize(res, 3);
         cursorContains(res, std::set<std::string>{"Bamboo Way", "Catalina Way", "Dwayne Way"}, "name");
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, test_condition_function_8, nogdb::ClassFilter{"railway"});
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression(test_condition_function_8), nogdb::ClassFilter{"railway"});
         assertSize(res, 2);
         cursorContains(res, std::set<std::string>{"Andy Way", "Catalina Way"}, "name");
-        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, test_condition_function_9, nogdb::ClassFilter{"railway"});
+        res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, nogdb::Expression(test_condition_function_9), nogdb::ClassFilter{"railway"});
         assertSize(res, 1);
         res.first();
         assert(res->record.get("name").toText() == "Dwayne Way");
@@ -2946,14 +2948,14 @@ void test_find_edge_all_cursor_condition_function() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Condition("name").eq("George Street"),
+        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression("name").eq(nogdb::Bytes("George Street")),
                                                    nogdb::ClassFilter{"street"});
         assertSize(res, 1);
-        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Condition("distance").ge(50.0),
+        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression("distance").ge(nogdb::Bytes(50.0)),
                                               nogdb::ClassFilter{"street"});
         assertSize(res, 2);
         cursorContains(res, std::set<std::string>{"Henry Road", "Jetty Road"}, "name");
@@ -2963,16 +2965,16 @@ void test_find_edge_all_cursor_condition_function() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
         auto classNames = nogdb::ClassFilter{"street", "railway"};
-        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, test_condition_function_10, classNames);
+        auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression(test_condition_function_10), classNames);
         assertSize(res, 1);
         res.next();
         assert(res->record.get("name").toText() == "Gravity Way");
-        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, test_condition_function_11, classNames);
+        res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, nogdb::Expression(test_condition_function_11), classNames);
         assertSize(res, 5);
     } catch (const nogdb::Error &ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
@@ -2987,8 +2989,8 @@ void test_find_invalid_edge_in_cursor_condition_function() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -3005,7 +3007,7 @@ void test_find_invalid_edge_in_cursor_condition_function() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, condition, nogdb::ClassFilter{"streets"});
+        auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3015,7 +3017,7 @@ void test_find_invalid_edge_in_cursor_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, condition, classNames);
+        auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, nogdb::Expression(condition), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3025,7 +3027,7 @@ void test_find_invalid_edge_in_cursor_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getInEdgeCursor(txn, edge.descriptor, condition, nogdb::ClassFilter{"street"});
+        auto edges = nogdb::Vertex::getInEdgeCursor(txn, edge.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3036,7 +3038,7 @@ void test_find_invalid_edge_in_cursor_condition_function() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getInEdgeCursor(txn, tmp, condition, nogdb::ClassFilter{"street"});
+        auto res = nogdb::Vertex::getInEdgeCursor(txn, tmp, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3049,8 +3051,8 @@ void test_find_invalid_edge_out_cursor_condition_function() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -3067,7 +3069,7 @@ void test_find_invalid_edge_out_cursor_condition_function() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, condition, nogdb::ClassFilter{"streets"});
+        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3077,7 +3079,7 @@ void test_find_invalid_edge_out_cursor_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, condition, classNames);
+        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, nogdb::Expression(condition), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3087,7 +3089,7 @@ void test_find_invalid_edge_out_cursor_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, edge.descriptor, condition, nogdb::ClassFilter{"street"});
+        auto edges = nogdb::Vertex::getOutEdgeCursor(txn, edge.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3098,7 +3100,7 @@ void test_find_invalid_edge_out_cursor_condition_function() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getOutEdgeCursor(txn, tmp, condition, nogdb::ClassFilter{"street"});
+        auto res = nogdb::Vertex::getOutEdgeCursor(txn, tmp, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3111,8 +3113,8 @@ void test_find_invalid_edge_all_cursor_condition_function() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -3128,7 +3130,7 @@ void test_find_invalid_edge_all_cursor_condition_function() {
     };
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, condition, nogdb::ClassFilter{"streets"});
+        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3138,7 +3140,7 @@ void test_find_invalid_edge_all_cursor_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
-        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, condition, classNames);
+        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, nogdb::Expression(condition), classNames);
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3148,7 +3150,7 @@ void test_find_invalid_edge_all_cursor_condition_function() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, edge.descriptor, condition, nogdb::ClassFilter{"street"});
+        auto edges = nogdb::Vertex::getAllEdgeCursor(txn, edge.descriptor, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3159,7 +3161,7 @@ void test_find_invalid_edge_all_cursor_condition_function() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto res = nogdb::Vertex::getAllEdgeCursor(txn, tmp, condition, nogdb::ClassFilter{"street"});
+        auto res = nogdb::Vertex::getAllEdgeCursor(txn, tmp, nogdb::Expression(condition), nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -3170,13 +3172,13 @@ void test_find_invalid_edge_all_cursor_condition_function() {
 void test_find_edge_in_cursor_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Dubai Building"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Dubai Building")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto expr = nogdb::Condition("distance").ge(80.0)
-                    or nogdb::Condition("capacity").gt(400U)
-                    or nogdb::Condition("temperature").lt(30);
+        auto expr = nogdb::Expression("distance").ge(nogdb::Bytes(80.0))
+                    or nogdb::Expression("capacity").gt(nogdb::Bytes(400U))
+                    or nogdb::Expression("temperature").lt(nogdb::Bytes(30));
         auto res = nogdb::Vertex::getInEdgeCursor(txn, vertex, expr);
         assertSize(res, 3);
         cursorContains(res, std::set<std::string>{"Andrew Street", "Andy Way", "George Street"}, "name");
@@ -3194,15 +3196,15 @@ void test_find_edge_in_cursor_with_expression() {
 void test_find_edge_out_cursor_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("New York Tower"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("New York Tower")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto expr = nogdb::Condition("name").contain("Road").ignoreCase()
-                    or (nogdb::Condition("temperature").null()
-                        and nogdb::Condition("capacity").ge(2000U))
-                    or (nogdb::Condition("temperature").gt(40)
-                        and nogdb::Condition("distance").lt(140.0));
+        auto expr = nogdb::Expression("name").contain(nogdb::Bytes("Road")).ignoreCase()
+                    or (nogdb::Expression("temperature").null()
+                        and nogdb::Expression("capacity").ge(nogdb::Bytes(2000U)))
+                    or (nogdb::Expression("temperature").gt(nogdb::Bytes(40))
+                        and nogdb::Expression("distance").lt(nogdb::Bytes(140.0)));
         auto res = nogdb::Vertex::getOutEdgeCursor(txn, vertex, expr, nogdb::ClassFilter{"street"});
         assertSize(res, 1);
         res.next();
@@ -3226,13 +3228,13 @@ void test_find_edge_out_cursor_with_expression() {
 void test_find_edge_all_cursor_with_expression() {
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
-        auto expr = nogdb::Condition("temperature")
-                    and nogdb::Condition("capacity")
-                    and nogdb::Condition("distance").gt(40.0);
+        auto expr = nogdb::Expression("temperature")
+                    and nogdb::Expression("capacity")
+                    and nogdb::Expression("distance").gt(nogdb::Bytes(40.0));
         auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, expr, nogdb::ClassFilter{"street"});
         assertSize(res, 2);
         cursorContains(res, std::set<std::string>{"George Street", "Jetty Road"}, "name");
@@ -3246,13 +3248,13 @@ void test_find_edge_all_cursor_with_expression() {
     }
 
     try {
-        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Condition("name").eq("Pentagon"));
+        auto vertices = nogdb::Vertex::getCursor(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("Pentagon")));
         assert(vertices.size() == 1);
         vertices.next();
         auto &vertex = vertices->descriptor;
         auto cond1 =
-                nogdb::Condition("@className").eq("street") and nogdb::Condition("name").contain("street").ignoreCase();
-        auto cond2 = nogdb::Condition("@className").eq("highway") and nogdb::Condition("name").endWith("C");
+                nogdb::Expression("@className").eq(nogdb::Bytes("street")) and nogdb::Expression("name").contain(nogdb::Bytes("street")).ignoreCase();
+        auto cond2 = nogdb::Expression("@className").eq(nogdb::Bytes("highway")) and nogdb::Expression("name").endWith(nogdb::Bytes("C"));
         auto res = nogdb::Vertex::getAllEdgeCursor(txn, vertex, cond1 or cond2);
         assertSize(res, 3);
         while (res.next()) {
@@ -3273,8 +3275,8 @@ void test_find_invalid_edge_in_cursor_with_expression() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -3286,7 +3288,7 @@ void test_find_invalid_edge_in_cursor_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, expr, nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3296,7 +3298,7 @@ void test_find_invalid_edge_in_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
         auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, expr, classNames);
         assert(false);
@@ -3307,7 +3309,7 @@ void test_find_invalid_edge_in_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("names").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("names").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3317,7 +3319,7 @@ void test_find_invalid_edge_in_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").contain("a");
+        auto expr = nogdb::Expression("distance").contain(nogdb::Bytes("a"));
         auto edges = nogdb::Vertex::getInEdgeCursor(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3328,7 +3330,7 @@ void test_find_invalid_edge_in_cursor_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getInEdgeCursor(txn, edge.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3340,7 +3342,7 @@ void test_find_invalid_edge_in_cursor_with_expression() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto res = nogdb::Vertex::getInEdgeCursor(txn, tmp, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3354,8 +3356,8 @@ void test_find_invalid_edge_out_cursor_with_expression() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -3367,7 +3369,7 @@ void test_find_invalid_edge_out_cursor_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, expr, nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3377,7 +3379,7 @@ void test_find_invalid_edge_out_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
         auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, expr, classNames);
         assert(false);
@@ -3388,7 +3390,7 @@ void test_find_invalid_edge_out_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("names").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("names").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3398,7 +3400,7 @@ void test_find_invalid_edge_out_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").contain("a");
+        auto expr = nogdb::Expression("distance").contain(nogdb::Bytes("a"));
         auto edges = nogdb::Vertex::getOutEdgeCursor(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3409,7 +3411,7 @@ void test_find_invalid_edge_out_cursor_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getOutEdgeCursor(txn, edge.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3421,7 +3423,7 @@ void test_find_invalid_edge_out_cursor_with_expression() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto res = nogdb::Vertex::getOutEdgeCursor(txn, tmp, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3435,8 +3437,8 @@ void test_find_invalid_edge_all_cursor_with_expression() {
     auto vertices = nogdb::ResultSet{};
     auto edges = nogdb::ResultSet{};
     try {
-        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Condition("name").eq("ThaiCC Tower"));
-        edges = nogdb::Edge::get(txn, "street", nogdb::Condition("name").eq("Andrew Street"));
+        vertices = nogdb::Vertex::get(txn, "locations", nogdb::Expression("name").eq(nogdb::Bytes("ThaiCC Tower")));
+        edges = nogdb::Edge::get(txn, "street", nogdb::Expression("name").eq(nogdb::Bytes("Andrew Street")));
         assert(vertices.size() == 1);
         assert(edges.size() == 1);
     } catch (const nogdb::Error &ex) {
@@ -3448,7 +3450,7 @@ void test_find_invalid_edge_all_cursor_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &vertex = vertices[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, expr, nogdb::ClassFilter{"streets"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3458,7 +3460,7 @@ void test_find_invalid_edge_all_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto classNames = nogdb::ClassFilter{"street", "railway", "subway"};
         auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, expr, classNames);
         assert(false);
@@ -3469,7 +3471,7 @@ void test_find_invalid_edge_all_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("names").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("names").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3479,7 +3481,7 @@ void test_find_invalid_edge_all_cursor_with_expression() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto expr = nogdb::Condition("distance").contain("a");
+        auto expr = nogdb::Expression("distance").contain(nogdb::Bytes("a"));
         auto edges = nogdb::Vertex::getAllEdgeCursor(txn, vertex.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3490,7 +3492,7 @@ void test_find_invalid_edge_all_cursor_with_expression() {
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     auto &edge = edges[0];
     try {
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto edges = nogdb::Vertex::getAllEdgeCursor(txn, edge.descriptor, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {
@@ -3502,7 +3504,7 @@ void test_find_invalid_edge_all_cursor_with_expression() {
     try {
         auto tmp = vertex.descriptor;
         tmp.rid.second = -1;
-        auto expr = nogdb::Condition("name").endWith("Street").ignoreCase() or nogdb::Condition("distance");
+        auto expr = nogdb::Expression("name").endWith(nogdb::Bytes("Street")).ignoreCase() or nogdb::Expression("distance");
         auto res = nogdb::Vertex::getAllEdgeCursor(txn, tmp, expr, nogdb::ClassFilter{"street"});
         assert(false);
     } catch (const nogdb::Error &ex) {

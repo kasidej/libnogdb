@@ -126,15 +126,15 @@ void test_get_set_large_record() {
             }
         }
 
-        res = nogdb::Vertex::get(txn, "books", nogdb::Condition("title").eq(testString1));
+        res = nogdb::Vertex::get(txn, "books", nogdb::Expression("title").eq(nogdb::Bytes(testString1)));
         assertSize(res, 1);
         assert(res[0].record.getInt("pages") == 10);
 
-        res = nogdb::Vertex::get(txn, "books", nogdb::Condition("title").eq(testString2));
+        res = nogdb::Vertex::get(txn, "books", nogdb::Expression("title").eq(nogdb::Bytes(testString2)));
         assertSize(res, 1);
         assert(res[0].record.getInt("pages") == 20);
 
-        res = nogdb::Vertex::get(txn, "books", nogdb::Condition("title").eq(testString3));
+        res = nogdb::Vertex::get(txn, "books", nogdb::Expression("title").eq(nogdb::Bytes(testString3)));
         assertSize(res, 1);
         assert(res[0].record.getInt("pages") == 30);
 
@@ -602,11 +602,11 @@ void test_drop_and_find_extended_class() {
 
     try {
         auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
-        auto res = nogdb::Vertex::get(txn, "vertex1", nogdb::Condition("prop0").eq(0U));
+        auto res = nogdb::Vertex::get(txn, "vertex1", nogdb::Expression("prop0").eq(nogdb::Bytes(0U)));
         assertSize(res, 2);
-        res = nogdb::Vertex::get(txn, "vertex3", nogdb::Condition("prop0").eq(0U));
+        res = nogdb::Vertex::get(txn, "vertex3", nogdb::Expression("prop0").eq(nogdb::Bytes(0U)));
         assertSize(res, 1);
-        res = nogdb::Vertex::get(txn, "vertex4", nogdb::Condition("prop0").eq(0U));
+        res = nogdb::Vertex::get(txn, "vertex4", nogdb::Expression("prop0").eq(nogdb::Bytes(0U)));
         assertSize(res, 1);
         txn.commit();
 
@@ -616,7 +616,7 @@ void test_drop_and_find_extended_class() {
 
         txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
         try {
-            auto res = nogdb::Vertex::get(txn, "vertex1", nogdb::Condition("prop0").eq(0U));
+            auto res = nogdb::Vertex::get(txn, "vertex1", nogdb::Expression("prop0").eq(nogdb::Bytes(0U)));
             assert(false);
         } catch (const nogdb::Error &ex) {
             txn.rollback();
@@ -625,7 +625,7 @@ void test_drop_and_find_extended_class() {
 
         txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
         try {
-            auto res = nogdb::Vertex::get(txn, "vertex3", nogdb::Condition("prop0").eq(0U));
+            auto res = nogdb::Vertex::get(txn, "vertex3", nogdb::Expression("prop0").eq(nogdb::Bytes(0U)));
             assert(false);
         } catch (const nogdb::Error &ex) {
             txn.rollback();
@@ -634,7 +634,7 @@ void test_drop_and_find_extended_class() {
 
         txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
         try {
-            auto res = nogdb::Vertex::get(txn, "vertex4", nogdb::Condition("prop0").eq(0U));
+            auto res = nogdb::Vertex::get(txn, "vertex4", nogdb::Expression("prop0").eq(nogdb::Bytes(0U)));
             assert(false);
         } catch (const nogdb::Error &ex) {
             txn.rollback();
@@ -689,7 +689,7 @@ void test_drop_and_find_extended_class() {
 
     txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "vertex6", nogdb::Condition("prop1").eq("hello"));
+        auto res = nogdb::Vertex::get(txn, "vertex6", nogdb::Expression("prop1").eq(nogdb::Bytes("hello")));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();
@@ -729,7 +729,7 @@ void test_conflict_property() {
 
     auto txn = nogdb::Txn{*ctx, nogdb::Txn::Mode::READ_ONLY};
     try {
-        auto res = nogdb::Vertex::get(txn, "vertex1", nogdb::Condition("prop2").eq(97));
+        auto res = nogdb::Vertex::get(txn, "vertex1", nogdb::Expression("prop2").eq(nogdb::Bytes(97)));
         assert(false);
     } catch (const nogdb::Error &ex) {
         txn.rollback();

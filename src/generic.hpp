@@ -105,8 +105,17 @@ namespace nogdb {
         getMultipleClassDescriptor(const Txn &txn, const std::set<std::string> &className, const ClassType &type);
 
         static std::vector<ClassInfo>
-        getMultipleClassMapProperty(const BaseTxn &txn, const std::set<Schema::ClassDescriptorPtr> &classDescriptors);
+        getMultipleClassInfo(const BaseTxn &txn, const std::set<Schema::ClassDescriptorPtr> &classDescriptors);
 
+        static PropertyType getPropertyType(const std::vector<ClassInfo> &classInfos, const std::string &propName);
+
+        static PropertyMapType getPropertyMapType(const std::vector<ClassInfo> &classInfos,
+                                                  const std::set<std::string> &propNames);
+
+        static PropertyMapType getPropertyMapType(const Txn &txn,
+                                                  const std::set<std::string> &classNames,
+                                                  const ClassType &classType,
+                                                  const std::set<std::string> &propNames);
     };
 }
 

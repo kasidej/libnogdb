@@ -68,12 +68,12 @@ add_library(nogdb
 )
 add_dependencies(nogdb lmdb_OBJ sql_parser.cpp)
 target_include_directories(nogdb
-    PRIVATE
-        /usr/local/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/nogdb/
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/
         ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/nogdb/
+        /usr/local/include
 )
 target_compile_options(nogdb
     PUBLIC
@@ -156,17 +156,20 @@ if(nogdb_BuildTests)
         ${nogdb_UNIT_TEST_HEADER}
         ${nogdb_UNIT_TEST_LMDB}
         ${nogdb_UNIT_TEST_LMDB_HEADER}
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/utils.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/datatype.cpp
     )
     target_include_directories(unittest_all
         PRIVATE
-            $<TARGET_PROPERTY:nogdb,INTERFACE_INCLUDE_DIRECTORIES>
+            $<TARGET_PROPERTY:nogdb,INCLUDE_DIRECTORIES>
     )
     find_library(gtest_LIB gtest)
     find_library(gmock_LIB gmock)
-    target_link_libraries(unittest_all lmdb ${gtest_LIB} ${gmock_LIB} pthread)
+    target_link_libraries(unittest_all
+            lmdb
+            nogdb
+            ${gtest_LIB}
+            ${gmock_LIB}
+            pthread
+    )
     if (NOT APPLE)
         target_link_libraries(unittest_all atomic)
     endif()

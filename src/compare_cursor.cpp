@@ -111,6 +111,31 @@ namespace nogdb {
     }
 
     std::vector<RecordDescriptor>
+    Compare::getRdescExpression(const Txn &txn,
+                                const std::vector<ClassInfo> &classInfos,
+                                const Expression &exp,
+                                const PropertyMapType &types) {
+        auto result = std::vector<RecordDescriptor>{};
+        auto dsTxnHandler = txn.txnBase->getDsTxnHandler();
+        for (const auto &classInfo: classInfos) {
+            auto cursorHandler = dsTxnHandler->openCursor(std::to_string(classInfo.id), true);
+            auto keyValue = cursorHandler.getNext();
+            while (!keyValue.empty()) {
+                auto key = keyValue.key.data.numeric<PositionId>();
+                if (key != EM_MAXRECNUM) {
+                    auto rid = RecordId{classInfo.id, key};
+                    auto record = Parser::parseRawDataWithBasicInfo(classInfo.name, rid, keyValue.val, classInfo.propertyInfo);
+                    if (exp.execute(record, types)) {
+                        result.emplace_back(RecordDescriptor{rid});
+                    }
+                }
+                keyValue = cursorHandler.getNext();
+            }
+        }
+        return result;
+    }
+
+    std::vector<RecordDescriptor>
     Compare::getRdescEdgeCondition(const Txn &txn, const RecordDescriptor &recordDescriptor,
                                    const std::vector<ClassId> &edgeClassIds,
                                    std::vector<RecordId> (Graph::*func)(const BaseTxn &txn, const RecordId &rid, const ClassId &classId),
@@ -246,11 +271,65 @@ namespace nogdb {
     }
 
     std::vector<RecordDescriptor>
+    Compare::getRdescEdgeExpression(const Txn &txn, const RecordDescriptor &recordDescriptor,
+                                    const std::vector<ClassId> &edgeClassIds,
+                                    std::vector<RecordId>
+                                    (Graph::*func)(const BaseTxn &baseTxn, const RecordId &rid, const ClassId &classId),
+                                    const Expression &exp, const PropertyMapType &types) {
+        switch (Generic::checkIfRecordExist(txn, recordDescriptor)) {
+            case RECORD_NOT_EXIST:
+                throw NOGDB_GRAPH_ERROR(NOGDB_GRAPH_NOEXST_VERTEX);
+            case RECORD_NOT_EXIST_IN_MEMORY:
+                return std::vector<RecordDescriptor>{};
+            default:
+                auto result = std::vector<RecordDescriptor>{};
+                auto dsTxnHandler = txn.txnBase->getDsTxnHandler();
+                try {
+                    auto classDescriptor = Schema::ClassDescriptorPtr{};
+                    auto classPropertyInfo = ClassPropertyInfo{};
+                    auto classDBHandler = storage_engine::lmdb::Dbi{};
+                    auto className = std::string{};
+                    auto retrieve = [&](std::vector<RecordDescriptor> &result, const RecordId &edge) {
+                        if (classDescriptor == nullptr || classDescriptor->id != edge.first) {
+                            classDescriptor = Generic::getClassDescriptor(txn, edge.first, ClassType::UNDEFINED);
+                            classPropertyInfo = Generic::getClassMapProperty(*txn.txnBase, classDescriptor);
+                            classDBHandler = dsTxnHandler->openDbi(std::to_string(edge.first), true);
+                            className = BaseTxn::getCurrentVersion(*txn.txnBase, classDescriptor->name).first;
+                        }
+                        auto keyValue = classDBHandler.get(edge.second);
+                        auto record = Parser::parseRawDataWithBasicInfo(className, edge, keyValue, classPropertyInfo);
+                        if (exp.execute(record, types)) {
+                            result.emplace_back(RecordDescriptor{edge});
+                        }
+                    };
+                    if (edgeClassIds.empty()) {
+                        for (const auto &edge: ((*txn.txnCtx.dbRelation).*func)(*txn.txnBase, recordDescriptor.rid, 0)) {
+                            retrieve(result, edge);
+                        }
+                    } else {
+                        for (const auto &edgeId: edgeClassIds) {
+                            for (const auto &edge: ((*txn.txnCtx.dbRelation).*func)(*txn.txnBase, recordDescriptor.rid, edgeId)) {
+                                retrieve(result, edge);
+                            }
+                        }
+                    }
+                } catch (const Error &err) {
+                    if (err.code() == NOGDB_GRAPH_NOEXST_VERTEX) {
+                        throw NOGDB_GRAPH_ERROR(NOGDB_GRAPH_UNKNOWN_ERR);
+                    } else {
+                        throw err;
+                    }
+                }
+                return result;
+        }
+    }
+
+    std::vector<RecordDescriptor>
     Compare::compareConditionRdesc(const Txn &txn, const std::string &className, ClassType type,
                                    const Condition &condition, bool searchIndexOnly) {
         auto propertyType = PropertyType::UNDEFINED;
         auto classDescriptors = Generic::getMultipleClassDescriptor(txn, std::set<std::string>{className}, type);
-        auto classInfos = Generic::getMultipleClassMapProperty(*txn.txnBase, classDescriptors);
+        auto classInfos = Generic::getMultipleClassInfo(*txn.txnBase, classDescriptors);
         for (const auto &classInfo: classInfos) {
             auto propertyInfo = classInfo.propertyInfo.nameToDesc.find(condition.propName);
             if (propertyInfo != classInfo.propertyInfo.nameToDesc.cend()) {
@@ -297,7 +376,7 @@ namespace nogdb {
         require(!conditionPropertyTypes.empty());
 
         auto classDescriptors = Generic::getMultipleClassDescriptor(txn, std::set<std::string>{className}, type);
-        auto classInfos = Generic::getMultipleClassMapProperty(*txn.txnBase, classDescriptors);
+        auto classInfos = Generic::getMultipleClassInfo(*txn.txnBase, classDescriptors);
         auto numOfUndefPropertyType = conditionPropertyTypes.size();
         for (const auto &classInfo: classInfos) {
             for (auto &property: conditionPropertyTypes) {
@@ -335,6 +414,31 @@ namespace nogdb {
     }
 
     std::vector<RecordDescriptor>
+    Compare::compareExpressionRdesc(const Txn &txn, const std::string &className, ClassType classType,
+                                        const Expression &exp, bool searchIndexOnly) {
+        // check if all conditions are valid
+        auto classDescriptors = Generic::getMultipleClassDescriptor(txn, {className}, classType);
+        auto classInfos = Generic::getMultipleClassInfo(*txn.txnBase, classDescriptors);
+        auto condPropTypes = Generic::getPropertyMapType(classInfos, exp.collectAllPropertyName());
+
+        //TODO: temporary fix indexing errors
+//        auto foundClassId = std::find_if(classDescriptors.cbegin(), classDescriptors.cend(),
+//                                         [&txn, &className](const Schema::ClassDescriptorPtr& ptr) {
+//            return BaseTxn::getCurrentVersion(*txn.txnBase, ptr->name).first == className;
+//        });
+//        auto &classId = (*foundClassId)->id;
+//        auto foundIndex = Index::hasIndex(classId, *classInfos.cbegin(), conditions);
+//        if (foundIndex.second) {
+//            return Index::getIndexRecord(txn, classId, foundIndex.first, conditions);
+//        }
+//        if (searchIndexOnly) {
+//            return std::vector<RecordDescriptor>{};
+//        } else {
+        return getRdescExpression(txn, classInfos, exp, condPropTypes);
+//        }
+    }
+
+    std::vector<RecordDescriptor>
     Compare::compareEdgeConditionRdesc(const Txn &txn, const RecordDescriptor &recordDescriptor,
                                        std::vector<RecordId>
                                        (Graph::*func1)(const BaseTxn &baseTxn, const RecordId &rid, const ClassId &classId),
@@ -365,14 +469,14 @@ namespace nogdb {
 
         auto edgeClassDescriptors = Generic::getMultipleClassDescriptor(txn, classFilter.getClassName(), ClassType::EDGE);
         if (!edgeClassDescriptors.empty()) {
-            auto edgeClassInfos = Generic::getMultipleClassMapProperty(*txn.txnBase, edgeClassDescriptors);
+            auto edgeClassInfos = Generic::getMultipleClassInfo(*txn.txnBase, edgeClassDescriptors);
             if (!validateProperty(edgeClassInfos, condition.propName)) {
                 throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_NOEXST_PROPERTY);
             }
         } else {
             auto edgeClassIds = ((*txn.txnCtx.dbRelation).*func2)(*txn.txnBase, recordDescriptor.rid);
             auto edgeClassDescriptors = Generic::getMultipleClassDescriptor(txn, edgeClassIds, ClassType::EDGE);
-            auto edgeClassInfos = Generic::getMultipleClassMapProperty(*txn.txnBase, edgeClassDescriptors);
+            auto edgeClassInfos = Generic::getMultipleClassInfo(*txn.txnBase, edgeClassDescriptors);
             if (!validateProperty(edgeClassInfos, condition.propName)) {
                 throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_NOEXST_PROPERTY);
             }
@@ -423,19 +527,48 @@ namespace nogdb {
 
         auto edgeClassDescriptors = Generic::getMultipleClassDescriptor(txn, classFilter.getClassName(), ClassType::EDGE);
         if (!edgeClassDescriptors.empty()) {
-            auto edgeClassInfos = Generic::getMultipleClassMapProperty(*txn.txnBase, edgeClassDescriptors);
+            auto edgeClassInfos = Generic::getMultipleClassInfo(*txn.txnBase, edgeClassDescriptors);
             if (!validateAndResolveProperties(edgeClassInfos, conditionPropertyTypes)) {
                 throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_NOEXST_PROPERTY);
             }
         } else {
             auto edgeClassIds = ((*txn.txnCtx.dbRelation).*func2)(*txn.txnBase, recordDescriptor.rid);
             auto edgeClassDescriptors = Generic::getMultipleClassDescriptor(txn, edgeClassIds, ClassType::EDGE);
-            auto edgeClassInfos = Generic::getMultipleClassMapProperty(*txn.txnBase, edgeClassDescriptors);
+            auto edgeClassInfos = Generic::getMultipleClassInfo(*txn.txnBase, edgeClassDescriptors);
             if (!validateAndResolveProperties(edgeClassInfos, conditionPropertyTypes)) {
                 throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_NOEXST_PROPERTY);
             }
         }
         return getRdescEdgeMultiCondition(txn, recordDescriptor, edgeClassIds, func1, conditions, conditionPropertyTypes);
+    }
+
+    std::vector<RecordDescriptor>
+    Compare::compareEdgeExpressionRdesc(const Txn &txn, const RecordDescriptor &recordDescriptor,
+                                        std::vector<RecordId>
+                                        (Graph::*func1)(const BaseTxn &baseTxn, const RecordId &rid, const ClassId &classId),
+                                        std::vector<ClassId>
+                                        (Graph::*func2)(const BaseTxn &baseTxn, const RecordId &rid),
+                                        const Expression &exp, const ClassFilter &classFilter) {
+        // validate class of `recordDescriptor`
+        Generic::getClassDescriptor(txn, recordDescriptor.rid.first, ClassType::VERTEX);
+
+        auto edgeClassDescriptors = std::set<Schema::ClassDescriptorPtr>();
+        auto edgeClassIds = std::vector<ClassId>();
+        if (classFilter.empty()) {
+            edgeClassIds = ((*txn.txnCtx.dbRelation).*func2)(*txn.txnBase, recordDescriptor.rid);
+            edgeClassDescriptors = Generic::getMultipleClassDescriptor(txn, edgeClassIds, ClassType::EDGE);
+        } else {
+            edgeClassDescriptors = Generic::getMultipleClassDescriptor(txn, classFilter.getClassName(), ClassType::EDGE);
+            edgeClassIds.resize(edgeClassDescriptors.size());
+            std::transform(edgeClassDescriptors.cbegin(),
+                           edgeClassDescriptors.cend(),
+                           edgeClassIds.begin(),
+                           [](const Schema::ClassDescriptorPtr &c) { return c->id; }
+            );
+        }
+        auto edgeClassInfos = Generic::getMultipleClassInfo(*txn.txnBase, edgeClassDescriptors);
+        auto condPropTypes = Generic::getPropertyMapType(edgeClassInfos, exp.collectAllPropertyName());
+        return getRdescEdgeExpression(txn, recordDescriptor, edgeClassIds, func1, exp, condPropTypes);
     }
 
 //*****************************************************************
@@ -469,7 +602,7 @@ namespace nogdb {
     Compare::compareConditionRdesc(const Txn &txn, const std::string &className, ClassType type,
                                    bool (*condition)(const Record &)) {
         auto classDescriptors = Generic::getMultipleClassDescriptor(txn, std::set<std::string>{className}, type);
-        auto classInfos = Generic::getMultipleClassMapProperty(*txn.txnBase, classDescriptors);
+        auto classInfos = Generic::getMultipleClassInfo(*txn.txnBase, classDescriptors);
         return getRdescCondition(txn, classInfos, condition);
     }
 
@@ -538,14 +671,14 @@ namespace nogdb {
         auto edgeClassIds = std::vector<ClassId>{};
         auto edgeClassDescriptors = Generic::getMultipleClassDescriptor(txn, classFilter.getClassName(), ClassType::EDGE);
         if (!edgeClassDescriptors.empty()) {
-            auto edgeClassInfos = Generic::getMultipleClassMapProperty(*txn.txnBase, edgeClassDescriptors);
+            auto edgeClassInfos = Generic::getMultipleClassInfo(*txn.txnBase, edgeClassDescriptors);
             for (const auto &classInfo: edgeClassInfos) {
                 edgeClassIds.push_back(classInfo.id);
             }
         } else {
             auto edgeClassIds = ((*txn.txnCtx.dbRelation).*func2)(*txn.txnBase, recordDescriptor.rid);
             auto edgeClassDescriptors = Generic::getMultipleClassDescriptor(txn, edgeClassIds, ClassType::EDGE);
-            auto edgeClassInfos = Generic::getMultipleClassMapProperty(*txn.txnBase, edgeClassDescriptors);
+            auto edgeClassInfos = Generic::getMultipleClassInfo(*txn.txnBase, edgeClassDescriptors);
             for (const auto &classInfo: edgeClassInfos) {
                 edgeClassIds.push_back(classInfo.id);
             }

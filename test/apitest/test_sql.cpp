@@ -919,31 +919,31 @@ void test_sql_select_vertex_condition() {
     try {
         auto result = SQL::execute(txn, "SELECT FROM v WHERE text='A'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").eq("A")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("text").eq(Bytes("A"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text='Z'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").eq("Z")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("text").eq(Bytes("Z"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE int=18");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("int").eq(18)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("int").eq(Bytes(Bytes(18)))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE uint=11600");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("uint").eq(11600)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("uint").eq(Bytes(11600))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE bigint=280000");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("bigint").eq(280000LL)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("bigint").eq(Bytes(280000LL))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE ubigint=900");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("ubigint").eq(900ULL)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("ubigint").eq(Bytes(900ULL))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE real=4.5");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("real").eq(4.5)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("real").eq(Bytes(4.5))));
     } catch (const Error& ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
         assert(false);
@@ -953,15 +953,15 @@ void test_sql_select_vertex_condition() {
     try {
         auto result = SQL::execute(txn, "SELECT FROM v WHERE @recordId = '" + rid2str(v1.rid) + "'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("@recordId").eq(rid2str(v1.rid))));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("@recordId").eq(Bytes(rid2str(v1.rid)))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE @className = 'v'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("@className").eq("v")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("@className").eq(nogdb::Bytes("v"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE @version > 0");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("@version").gt(0ULL)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("@version").gt(nogdb::Bytes(0ULL))));
     } catch (const Error& ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
         assert(false);
@@ -970,23 +970,23 @@ void test_sql_select_vertex_condition() {
     try {
         auto result = SQL::execute(txn, "SELECT FROM v WHERE text != 'A'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not Condition("text").eq("A")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not nogdb::Expression("text").eq(nogdb::Bytes("A"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE int > 35");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("int").gt(35)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("int").gt(nogdb::Bytes(35))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE real >= 4.5");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("real").ge(4.5)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("real").ge(nogdb::Bytes(4.5))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE uint < 10300");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("uint").lt(10300)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("uint").lt(nogdb::Bytes(10300))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE ubigint <= 900");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("ubigint").le(900ULL)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("ubigint").le(nogdb::Bytes(900ULL))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE bigint IS NULL");
         assert(result.type() == result.RESULT_SET);
@@ -998,11 +998,11 @@ void test_sql_select_vertex_condition() {
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text = 100");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").eq(100)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("text").eq(nogdb::Bytes(100))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE ubigint = 2000");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("ubigint").eq(2000ULL)));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("ubigint").eq(nogdb::Bytes(2000ULL))));
     } catch (const Error& ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
         assert(false);
@@ -1011,51 +1011,51 @@ void test_sql_select_vertex_condition() {
     try {
         auto result = SQL::execute(txn, "SELECT FROM v WHERE text CONTAIN 'a'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").contain("a").ignoreCase()));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("text").contain(nogdb::Bytes("a")).ignoreCase()));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE NOT (text CONTAIN 'b')");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not Condition("text").contain("b").ignoreCase()));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not nogdb::Expression("text").contain(nogdb::Bytes("b")).ignoreCase()));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text BEGIN WITH 'a'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").beginWith("a").ignoreCase()));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("text").beginWith(nogdb::Bytes("a")).ignoreCase()));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE NOT text BEGIN WITH CASE 'A'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not Condition("text").beginWith("A")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not nogdb::Expression("text").beginWith(nogdb::Bytes("A"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text END WITH 'x'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").endWith("x").ignoreCase()));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("text").endWith(nogdb::Bytes("x")).ignoreCase()));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE NOT text END WITH CASE 'Y'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not Condition("text").endWith("Y")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not nogdb::Expression("text").endWith(nogdb::Bytes("Y"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text > 'B2Y'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").gt("B2Y")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("text").gt(nogdb::Bytes("B2Y"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text >= 'B2Y'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").ge("B2Y")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("text").ge(nogdb::Bytes("B2Y"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text < 'B2Y'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").lt("B2Y")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("text").lt(nogdb::Bytes("B2Y"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text <= 'B2Y'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").le("B2Y")));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("text").le(nogdb::Bytes("B2Y"))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text IN ['B1Y', 'A']");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").in(vector<string>{"B1Y", "A"}).ignoreCase()));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("text").in(vector<Bytes>{Bytes("B1Y"), Bytes("A")}).ignoreCase()));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text LIKE '%1%'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("text").like("%1%").ignoreCase()));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("text").like(nogdb::Bytes("%1%")).ignoreCase()));
     } catch (const Error& ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
         assert(false);
@@ -1073,7 +1073,11 @@ void test_sql_select_vertex_with_multi_condition() {
     try {
         auto result = SQL::execute(txn, "SELECT FROM v WHERE prop1 END WITH 'X' OR prop2 >= 2");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("prop1").endWith("X").ignoreCase() or Condition("prop2").ge(2)));
+        assert(result.get<ResultSet>() == Vertex::get(txn,
+                                                      "v",
+                                                      nogdb::Expression("prop1").endWith(nogdb::Bytes("X")).ignoreCase()
+                                                      or nogdb::Expression("prop2").ge(nogdb::Bytes(2)))
+        );
     } catch (const Error& ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
         assert(false);
@@ -1082,7 +1086,12 @@ void test_sql_select_vertex_with_multi_condition() {
     try {
         auto result = SQL::execute(txn, "SELECT FROM v WHERE (prop1 = 'C' AND prop2 = 3) OR prop1 = 'AX'");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", (Condition("prop1").eq("C") and Condition("prop2").eq(3)) or Condition("prop1").eq("AX")));
+        assert(result.get<ResultSet>() == Vertex::get(txn,
+                                                      "v",
+                                                      (Expression("prop1").eq(nogdb::Bytes("C"))
+                                                       and Expression("prop2").eq(nogdb::Bytes(3)))
+                                                      or Expression("prop1").eq(nogdb::Bytes("AX")))
+        );
     } catch (const Error& ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
         assert(false);
@@ -1091,7 +1100,12 @@ void test_sql_select_vertex_with_multi_condition() {
     try {
         auto result = SQL::execute(txn, "SELECT FROM v WHERE (prop1 = 'AX') OR (prop1 = 'C' AND prop2 = 3)");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("prop1").eq("AX") or (Condition("prop1").eq("C") and Condition("prop2").eq(3))));
+        assert(result.get<ResultSet>() == Vertex::get(txn,
+                                                      "v",
+                                                      Expression("prop1").eq(nogdb::Bytes("AX"))
+                                                      or (Expression("prop1").eq(nogdb::Bytes("C"))
+                                                          and Expression("prop2").eq(nogdb::Bytes(3))))
+        );
     } catch (const Error& ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
         assert(false);
@@ -1100,7 +1114,13 @@ void test_sql_select_vertex_with_multi_condition() {
     try {
         auto result = SQL::execute(txn, "SELECT FROM v WHERE (@className='v' AND prop2<2) OR (@className='x' AND prop2>0)");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", (Condition("@className").eq("v") and Condition("prop2").lt(2)) or (Condition("@className").eq("x") and Condition("prop2").gt(0))));
+        assert(result.get<ResultSet>() == Vertex::get(txn,
+                                                      "v",
+                                                      (Expression("@className").eq(nogdb::Bytes("v"))
+                                                       and Expression("prop2").lt(nogdb::Bytes(2)))
+                                                      or (Expression("@className").eq(nogdb::Bytes("x"))
+                                                          and Expression("prop2").gt(nogdb::Bytes(0))))
+        );
     } catch (const Error& ex) {
         std::cout << "\nError: " << ex.what() << std::endl;
         assert(false);
@@ -1158,7 +1178,7 @@ void test_sql_select_skip_limit() {
 
         result = SQL::execute(txn, "SELECT * FROM (SELECT FROM v) WHERE prop2<3 SKIP 0 LIMIT 1");
         assert(result.type() == result.RESULT_SET);
-        baseResult = Vertex::get(txn, "v", Condition("prop2").le(3));
+        baseResult = Vertex::get(txn, "v", Expression("prop2").le(nogdb::Bytes(3)));
         baseResult.resize(1);
         assert(result.get<ResultSet>() == baseResult);
 
@@ -1506,17 +1526,17 @@ void test_sql_validate_property_type() {
         assertSize(res, 2);
 
         res = Vertex::get(txn, "sql_valid_type",
-                          Condition("tiny").eq(tiny)
-                          && Condition("utiny").eq(utiny)
-                          && Condition("small").eq(small)
-                          && Condition("usmall").eq(usmall)
-                          && Condition("integer").eq(integer)
-                          && Condition("uinteger").eq(uinteger)
-                          && Condition("bigint").eq(bigint)
-                          && Condition("ubigint").eq(ubigint)
-                          && Condition("text").eq(baseText)
-                          && Condition("real").eq(real)
-                          && Condition("blob").eq(blob));
+                          Expression("tiny").eq(nogdb::Bytes(tiny))
+                          && Expression("utiny").eq(nogdb::Bytes(utiny))
+                          && Expression("small").eq(nogdb::Bytes(small))
+                          && Expression("usmall").eq(nogdb::Bytes(usmall))
+                          && Expression("integer").eq(nogdb::Bytes(integer))
+                          && Expression("uinteger").eq(nogdb::Bytes(uinteger))
+                          && Expression("bigint").eq(nogdb::Bytes(bigint))
+                          && Expression("ubigint").eq(nogdb::Bytes(ubigint))
+                          && Expression("text").eq(nogdb::Bytes(baseText))
+                          && Expression("real").eq(nogdb::Bytes(real))
+                          && Expression("blob").eq(nogdb::Bytes(blob)));
         assertSize(res, 2);
 
         string sqlSelect = (string("SELECT * FROM sql_valid_type ")
@@ -1587,24 +1607,28 @@ void test_sql_traverse() {
         result = SQL::execute(txn, "TRAVERSE all('EL') FROM " + to_string(v21) + " MINDEPTH 1 MAXDEPTH 1 STRATEGY BREADTH_FIRST");
         assert(result.type() == result.RESULT_SET);
         assert(result.get<ResultSet>() == Traverse::allEdgeBfs(txn, v21, 1, 1, {"EL"}));
-        
+
         result = SQL::execute(txn, "SELECT p FROM (TRAVERSE out() FROM " + to_string(v1) + ") WHERE p = 'v22'");
         assert(result.type() == result.RESULT_SET);
         {
             auto traverseResult = Traverse::outEdgeDfs(txn, v1, 0, UINT_MAX);
-            vector<string> traverseRid(traverseResult.size());
+            vector<Bytes> traverseRid(traverseResult.size());
             transform(traverseResult.cbegin(),
                       traverseResult.cend(),
                       traverseRid.begin(),
-                      [](const Result &r) { return rid2str(r.descriptor.rid); });
-            auto selectResult = Vertex::get(txn, "V", Condition("@recordId").in(traverseRid) && Condition("p").eq("v22"));
+                      [](const Result &r) { return Bytes(rid2str(r.descriptor.rid)); });
+            auto selectResult = Vertex::get(txn,
+                                            "V",
+                                            Expression("@recordId").in(traverseRid)
+                                            && Expression("p").eq(nogdb::Bytes("v22"))
+            );
             assert(result.get<ResultSet>() == selectResult);
         }
     } catch (const Error &e) {
         cout << "\nError: " << e.what() << endl;
         assert(false);
     }
-    
+
     Class::drop(txn, "V");
     Class::drop(txn, "EL");
     Class::drop(txn, "ER");
