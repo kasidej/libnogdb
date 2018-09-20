@@ -50,7 +50,6 @@ void Context::createClass(const Token &tName, const Token &tExtend, bool checkIf
     ClassDescriptor result;
     string name = tName.toString();
     try {
-        ClassType classType;
         if (tExtend.t == TK_VERTEX) {
             result = Class::create(this->txn, name, ClassType::VERTEX);
         } else if (tExtend.t == TK_EDGE) {
@@ -59,16 +58,13 @@ void Context::createClass(const Token &tName, const Token &tExtend, bool checkIf
             result = Class::createExtend(this->txn, name, tExtend.toString());
         }
 
-        this->rc = SQL_OK;
         this->result = SQL::Result(new ClassDescriptor(move(result)));
-    } catch (const Error &e) {
+    } catch (const ContextError &e) {
         if (checkIfNotExists && e.code() == NOGDB_CTX_DUPLICATE_CLASS) {
             result = Db::getSchema(this->txn, name);
-            this->rc = SQL_OK;
             this->result = SQL::Result(new ClassDescriptor(move(result)));
         } else {
-            this->rc = SQL_ERROR;
-            this->result = SQL::Result(new Error(e));
+            throw e;
         }
     }
 }
@@ -85,44 +81,35 @@ void Context::alterClass(const Token &tName, const Token &tAttr, const Bytes &va
             stringcasecmp
     );
 
+    string attrStr = tAttr.toString();
+    AlterAttr attr;
     try {
-        string attrStr = tAttr.toString();
-        AlterAttr attr;
-        try {
-            attr = attrMap.at(attrStr);
-        } catch (...) {
-            attr = UNDEFINED;
-        }
+        attr = attrMap.at(attrStr);
+    } catch (...) {
+        attr = UNDEFINED;
+    }
 
-        switch (attr) {
-            case ALTER_NAME:
-                nogdb::Class::alter(this->txn, tName.toString(), value.toText());
-                this->rc = SQL_OK;
-                this->result = SQL::Result();
-                break;
+    switch (attr) {
+        case ALTER_NAME:
+            nogdb::Class::alter(this->txn, tName.toString(), value.toText());
+            this->result = SQL::Result();
+            break;
 
-            case UNDEFINED:
-            default:
-                throw NOGDB_SQL_ERROR(NOGDB_SQL_INVALID_ALTER_ATTR);
-        }
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
+        case UNDEFINED:
+        default:
+            throw NOGDB_SQL_ERROR(NOGDB_SQL_INVALID_ALTER_ATTR);
     }
 }
 
 void Context::dropClass(const Token &tName, bool checkIfExists) {
     try {
         Class::drop(this->txn, tName.toString());
-        this->rc = SQL_OK;
         this->result = SQL::Result();
-    } catch (const Error &e) {
+    } catch (const ContextError &e) {
         if (checkIfExists && e.code() == NOGDB_CTX_NOEXST_CLASS) {
-            this->rc = SQL_OK;
             this->result = SQL::Result();
         } else {
-            this->rc = SQL_ERROR;
-            this->result = SQL::Result(new Error(e));
+            throw e;
         }
     }
 }
@@ -157,16 +144,13 @@ Context::createProperty(const Token &tClassName, const Token &tPropName, const T
 
         result = Property::add(this->txn, tClassName.toString(), tPropName.toString(), t);
 
-        this->rc = SQL_OK;
         this->result = SQL::Result(new PropertyDescriptor(move(result)));
-    } catch (const Error &e) {
+    } catch (const ContextError &e) {
         if (checkIfNotExists && e.code() == NOGDB_CTX_DUPLICATE_PROPERTY) {
             result = Db::getSchema(this->txn, tClassName.toString()).properties.at(tPropName.toString());
-            this->rc = SQL_OK;
             this->result = SQL::Result(new PropertyDescriptor(move(result)));
         } else {
-            this->rc = SQL_ERROR;
-            this->result = SQL::Result(new Error(e));
+            throw e;
         }
     }
 }
@@ -183,267 +167,202 @@ void Context::alterProperty(const Token &tClassName, const Token &tPropName, con
             stringcasecmp
     );
 
+    string attrStr = tAttr.toString();
+    AlterAttr attr;
     try {
-        string attrStr = tAttr.toString();
-        AlterAttr attr;
-        try {
-            attr = attrMap.at(attrStr);
-        } catch (...) {
-            attr = UNDEFINED;
-        }
+        attr = attrMap.at(attrStr);
+    } catch (...) {
+        attr = UNDEFINED;
+    }
 
-        switch (attr) {
-            case ALTER_NAME:
-                nogdb::Property::alter(this->txn, tClassName.toString(), tPropName.toString(), value.toText());
-                this->rc = SQL_OK;
-                this->result = SQL::Result();
-                break;
+    switch (attr) {
+        case ALTER_NAME:
+            nogdb::Property::alter(this->txn, tClassName.toString(), tPropName.toString(), value.toText());
+            this->result = SQL::Result();
+            break;
 
-            case UNDEFINED:
-            default:
-                throw NOGDB_SQL_ERROR(NOGDB_SQL_INVALID_ALTER_ATTR);
-        }
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
+        case UNDEFINED:
+        default:
+            throw NOGDB_SQL_ERROR(NOGDB_SQL_INVALID_ALTER_ATTR);
     }
 }
 
 void Context::dropProperty(const Token &tClassName, const Token &tPropName, bool checkIfExists) {
     try {
         Property::remove(this->txn, tClassName.toString(), tPropName.toString());
-        this->rc = SQL_OK;
         this->result = SQL::Result();
-    } catch (const Error &e) {
+    } catch (const ContextError &e) {
         if (checkIfExists && e.code() == NOGDB_CTX_NOEXST_PROPERTY) {
-            this->rc = SQL_OK;
             this->result = SQL::Result();
         } else {
-            this->rc = SQL_ERROR;
-            this->result = SQL::Result(new Error(e));
+            throw e;
         }
     }
 }
 
 void Context::createVertex(const Token &tClassName, const nogdb::Record &prop) {
-    try {
-        const nogdb::RecordDescriptor result = Vertex::create(this->txn, tClassName.toString(), prop);
-        this->rc = SQL_OK;
-        this->result = SQL::Result(new vector<nogdb::RecordDescriptor>{result});
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
-    }
+    const nogdb::RecordDescriptor result = Vertex::create(this->txn, tClassName.toString(), prop);
+    this->result = SQL::Result(new vector<nogdb::RecordDescriptor>{result});
 }
 
 void Context::createEdge(const CreateEdgeArgs &args) {
-    try {
-        auto srcVertex = this->select(args.src, Where());
-        auto destVertex = this->select(args.dest, Where());
+    auto srcVertex = this->select(args.src, Where());
+    auto destVertex = this->select(args.dest, Where());
 
-        vector<nogdb::RecordDescriptor> result{};
-        for (const auto &src: srcVertex) {
-            for (const auto &dest: destVertex) {
-                nogdb::RecordDescriptor r = Edge::create(this->txn, args.name, src.descriptor, dest.descriptor,
-                                                         args.prop);
-                result.push_back(move(r));
-            }
+    vector<nogdb::RecordDescriptor> result{};
+    for (const auto &src: srcVertex) {
+        for (const auto &dest: destVertex) {
+            nogdb::RecordDescriptor r = Edge::create(this->txn, args.name, src.descriptor, dest.descriptor,
+                                                     args.prop);
+            result.push_back(move(r));
         }
-        this->rc = SQL_OK;
-        this->result = SQL::Result(new vector<nogdb::RecordDescriptor>(move(result)));
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
     }
+    this->result = SQL::Result(new vector<nogdb::RecordDescriptor>(move(result)));
 }
 
 void Context::select(const SelectArgs &args) {
-    try {
-        ResultSet result = this->selectPrivate(args);
-        this->rc = SQL_OK;
-        nogdb::ResultSet *tmp = new nogdb::ResultSet(result.size());
-        transform(result.cbegin(), result.cend(), tmp->begin(), [](const Result &r) { return r.toBaseResult(); });
-        this->result = SQL::Result(tmp);
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
-    }
+    ResultSet result = this->selectPrivate(args);
+    nogdb::ResultSet *tmp = new nogdb::ResultSet(result.size());
+    transform(result.cbegin(), result.cend(), tmp->begin(), [](const Result &r) { return r.toBaseResult(); });
+    this->result = SQL::Result(tmp);
 }
 
 void Context::update(const UpdateArgs &args) {
-    try {
-        vector<nogdb::RecordDescriptor> result{};
-        ResultSet targets = this->select(args.target, args.where);
-        for (auto &target: targets) {
-            nogdb::Record r = target.record.toBaseRecord();
-            for (const auto &prop: args.prop.getAll()) {
-                r.set(prop.first, prop.second);
-            }
-            ClassType type = Db::getSchema(this->txn, target.descriptor.rid.first).type;
-            switch (type) {
-                case ClassType::VERTEX:
-                    Vertex::update(this->txn, target.descriptor, r);
-                    break;
-                case ClassType::EDGE:
-                    Edge::update(this->txn, target.descriptor, r);
-                    break;
-                case ClassType::UNDEFINED:
-                    throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_INVALID_CLASSTYPE);
-            }
-            result.push_back(target.descriptor);
+    vector<nogdb::RecordDescriptor> result{};
+    ResultSet targets = this->select(args.target, args.where);
+    for (auto &target: targets) {
+        nogdb::Record r = target.record.toBaseRecord();
+        for (const auto &prop: args.prop.getAll()) {
+            r.set(prop.first, prop.second);
         }
-        this->rc = SQL_OK;
-        this->result = SQL::Result(new vector<nogdb::RecordDescriptor>(move(result)));
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
+        ClassType type = Db::getSchema(this->txn, target.descriptor.rid.first).type;
+        switch (type) {
+            case ClassType::VERTEX:
+                Vertex::update(this->txn, target.descriptor, r);
+                break;
+            case ClassType::EDGE:
+                Edge::update(this->txn, target.descriptor, r);
+                break;
+            case ClassType::UNDEFINED:
+                throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_INVALID_CLASSTYPE);
+        }
+        result.push_back(target.descriptor);
     }
+    this->result = SQL::Result(new vector<nogdb::RecordDescriptor>(move(result)));
 }
 
 void Context::deleteVertex(const DeleteVertexArgs &args) {
-    try {
-        vector<nogdb::RecordDescriptor> result{};
-        ResultSet targets = select(args.target, args.where);
-        for (const auto &target: targets) {
-            Vertex::destroy(this->txn, target.descriptor);
-            result.push_back(target.descriptor);
-        }
-        this->rc = SQL_OK;
-        this->result = SQL::Result(new vector<nogdb::RecordDescriptor>(move(result)));
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
+    vector<nogdb::RecordDescriptor> result{};
+    ResultSet targets = select(args.target, args.where);
+    for (const auto &target: targets) {
+        Vertex::destroy(this->txn, target.descriptor);
+        result.push_back(target.descriptor);
     }
+    this->result = SQL::Result(new vector<nogdb::RecordDescriptor>(move(result)));
 }
 
 void Context::deleteEdge(const DeleteEdgeArgs &args) {
-    try {
-        RecordDescriptorSet targets{};
+    RecordDescriptorSet targets{};
 
-        if (args.target.type == TargetType::CLASS) {
-            ResultSet srcs, dests;
-            RecordDescriptorSet outEdgeRids{}, inEdgeRids{};
+    if (args.target.type == TargetType::CLASS) {
+        ResultSet srcs, dests;
+        RecordDescriptorSet outEdgeRids{}, inEdgeRids{};
 
-            string className = args.target.get<string>();
+        string className = args.target.get<string>();
 
-            // get outEdge from these sources.
-            srcs = this->select(args.from, Where());
-            const auto whereType = args.where.type;
-            for (const auto &src: srcs) {
+        // get outEdge from these sources.
+        srcs = this->select(args.from, Where());
+        const auto whereType = args.where.type;
+        for (const auto &src: srcs) {
+            ResultSet edges;
+            switch (whereType) {
+                case WhereType::NO_COND:
+                    edges = Vertex::getOutEdge(this->txn, src.descriptor, ClassFilter({className}));
+                    break;
+                case WhereType::CONDITION:
+                    edges = Vertex::getOutEdge(this->txn, src.descriptor, args.where.get<Condition>(),
+                                               ClassFilter({className}));
+                    break;
+                case WhereType::MULTI_COND:
+                    edges = Vertex::getOutEdge(this->txn, src.descriptor, args.where.get<MultiCondition>(),
+                                               ClassFilter({className}));
+                    break;
+            }
+            // edgeDescs += edges;
+            for (auto &edge: edges) {
+                outEdgeRids.insert(move(edge.descriptor));
+            }
+        }
+
+        // get inEdge from these desination. (skip if can't find source)
+        if (!outEdgeRids.empty() || args.from.type == TargetType::NO_TARGET) {
+            ResultSet dests = this->select(args.to, Where());
+            for (const auto &dest: dests) {
                 ResultSet edges;
                 switch (whereType) {
                     case WhereType::NO_COND:
-                        edges = Vertex::getOutEdge(this->txn, src.descriptor, ClassFilter({className}));
+                        edges = Vertex::getInEdge(this->txn, dest.descriptor, ClassFilter({className}));
                         break;
                     case WhereType::CONDITION:
-                        edges = Vertex::getOutEdge(this->txn, src.descriptor, args.where.get<Condition>(),
-                                                   ClassFilter({className}));
+                        edges = Vertex::getInEdge(this->txn, dest.descriptor, args.where.get<Condition>(),
+                                                  ClassFilter({className}));
                         break;
                     case WhereType::MULTI_COND:
-                        edges = Vertex::getOutEdge(this->txn, src.descriptor, args.where.get<MultiCondition>(),
-                                                   ClassFilter({className}));
+                        edges = Vertex::getInEdge(this->txn, dest.descriptor, args.where.get<MultiCondition>(),
+                                                  ClassFilter({className}));
                         break;
                 }
-                // edgeDescs += edges;
+                // inEdgeDescs += edges
                 for (auto &edge: edges) {
-                    outEdgeRids.insert(move(edge.descriptor));
+                    inEdgeRids.insert(move(edge.descriptor));
                 }
             }
-
-            // get inEdge from these desination. (skip if can't find source)
-            if (!outEdgeRids.empty() || args.from.type == TargetType::NO_TARGET) {
-                ResultSet dests = this->select(args.to, Where());
-                for (const auto &dest: dests) {
-                    ResultSet edges;
-                    switch (whereType) {
-                        case WhereType::NO_COND:
-                            edges = Vertex::getInEdge(this->txn, dest.descriptor, ClassFilter({className}));
-                            break;
-                        case WhereType::CONDITION:
-                            edges = Vertex::getInEdge(this->txn, dest.descriptor, args.where.get<Condition>(),
-                                                      ClassFilter({className}));
-                            break;
-                        case WhereType::MULTI_COND:
-                            edges = Vertex::getInEdge(this->txn, dest.descriptor, args.where.get<MultiCondition>(),
-                                                      ClassFilter({className}));
-                            break;
-                    }
-                    // inEdgeDescs += edges
-                    for (auto &edge: edges) {
-                        inEdgeRids.insert(move(edge.descriptor));
-                    }
-                }
-            }
-
-            // process target.
-            if (args.from.type != TargetType::NO_TARGET
-                && args.to.type != TargetType::NO_TARGET) {
-                set_intersection(outEdgeRids.begin(), outEdgeRids.end(),
-                                 inEdgeRids.begin(), inEdgeRids.end(),
-                                 inserter(targets, targets.begin()));
-            } else if (args.from.type != TargetType::NO_TARGET) {
-                targets = move(inEdgeRids);
-            } else if (args.to.type != TargetType::NO_TARGET) {
-                targets = move(outEdgeRids);
-            } else /* if (from == NO_TARGET && to == NO_TARGET) */ {
-                ResultSetCursor edges = this->selectEdge(className, args.where);
-                while (edges.next()) {
-                    targets.insert(move(edges->descriptor));
-                }
-            }
-        } else if (args.target.type == TargetType::RIDS) {
-            targets = args.target.get<RecordDescriptorSet>();
         }
 
-        // delete.
-        for (const auto &target: targets) {
-            Edge::destroy(this->txn, target);
+        // process target.
+        if (args.from.type != TargetType::NO_TARGET
+            && args.to.type != TargetType::NO_TARGET) {
+            set_intersection(outEdgeRids.begin(), outEdgeRids.end(),
+                             inEdgeRids.begin(), inEdgeRids.end(),
+                             inserter(targets, targets.begin()));
+        } else if (args.from.type != TargetType::NO_TARGET) {
+            targets = move(inEdgeRids);
+        } else if (args.to.type != TargetType::NO_TARGET) {
+            targets = move(outEdgeRids);
+        } else /* if (from == NO_TARGET && to == NO_TARGET) */ {
+            ResultSetCursor edges = this->selectEdge(className, args.where);
+            while (edges.next()) {
+                targets.insert(move(edges->descriptor));
+            }
         }
-
-        this->rc = SQL_OK;
-        this->result = SQL::Result(new vector<RecordDescriptor>(targets.begin(), targets.end()));
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
+    } else if (args.target.type == TargetType::RIDS) {
+        targets = args.target.get<RecordDescriptorSet>();
     }
+
+    // delete.
+    for (const auto &target: targets) {
+        Edge::destroy(this->txn, target);
+    }
+
+    this->result = SQL::Result(new vector<RecordDescriptor>(targets.begin(), targets.end()));
 }
 
 void Context::traverse(const TraverseArgs &args) {
-    try {
-        ResultSet result = this->traversePrivate(args);
-        this->rc = SQL_OK;
-        nogdb::ResultSet *tmp = new nogdb::ResultSet(result.size());
-        transform(result.cbegin(), result.cend(), tmp->begin(), [](const Result &r) { return r.toBaseResult(); });
-        this->result = SQL::Result(tmp);
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
-    }
+    ResultSet result = this->traversePrivate(args);
+    nogdb::ResultSet *tmp = new nogdb::ResultSet(result.size());
+    transform(result.cbegin(), result.cend(), tmp->begin(), [](const Result &r) { return r.toBaseResult(); });
+    this->result = SQL::Result(tmp);
 }
 
 void Context::createIndex(const Token &tClassName, const Token &tPropName, const Token &tIndexType) {
-    try {
-        bool unique = stringcasecmp(tIndexType.toString(), "UNIQUE") == 0 ? true : false;
-        Property::createIndex(this->txn, tClassName.toString(), tPropName.toString(), unique);
-
-        this->rc = SQL_OK;
-        this->result = SQL::Result();
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
-    }
+    bool unique = stringcasecmp(tIndexType.toString(), "UNIQUE") == 0;
+    Property::createIndex(this->txn, tClassName.toString(), tPropName.toString(), unique);
+    this->result = SQL::Result();
 }
 
 void Context::dropIndex(const Token &tClassName, const Token &tPropName) {
-    try {
-        Property::dropIndex(this->txn, tClassName.toString(), tPropName.toString());
-
-        this->rc = SQL_OK;
-        this->result = SQL::Result();
-    } catch (const Error &e) {
-        this->rc = SQL_ERROR;
-        this->result = SQL::Result(new Error(e));
-    }
+    Property::dropIndex(this->txn, tClassName.toString(), tPropName.toString());
+    this->result = SQL::Result();
 }
 
 

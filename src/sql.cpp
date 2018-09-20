@@ -929,9 +929,6 @@ const nogdb::SQL::Result nogdb::SQL::execute(Txn &txn, const std::string &sql) {
             parser->parse(tokenType, {zSql, n, tokenType});
             lastTokenParsed = tokenType;
             zSql += n;
-            if (parser->rc != sql_parser::Context::SQL_OK) {
-                throw parser->result.get<Error>();
-            }
         }
     }
 

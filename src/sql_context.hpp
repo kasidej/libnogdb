@@ -39,24 +39,18 @@ namespace nogdb {
             Context(Txn &txn_) : txn(txn_) {}
 
             Txn &txn;
-            enum {
-                SQL_OK,
-                SQL_ERROR,
-            } rc{SQL_OK};
             SQL::Result result;
 
 
             // parser error.
-            void syntax_error(int tokenType, Token &token) {
+            void syntax_error(int tokenType, Token &token) override {
                 cerr << "nogdb::SQL::execute: syntax error near '" << string(token.z, token.n) << "'" << endl;
-                rc = SQL_ERROR;
-                result = SQL::Result(new NOGDB_SQL_ERROR(NOGDB_SQL_SYNTAX_ERROR));
+                throw NOGDB_SQL_ERROR(NOGDB_SQL_SYNTAX_ERROR);
             }
 
-            void parse_failure() {
+            void parse_failure() override {
                 cerr << "nogdb::SQL::execute: parse failure." << endl;
-                rc = SQL_ERROR;
-                result = SQL::Result(new NOGDB_SQL_ERROR(NOGDB_SQL_SYNTAX_ERROR));
+                throw NOGDB_SQL_ERROR(NOGDB_SQL_SYNTAX_ERROR);
             }
 
 
@@ -99,7 +93,7 @@ namespace nogdb {
             void createIndex(const Token &tClassName, const Token &tPropName, const Token &tIndexType);
 
             void dropIndex(const Token &tClassName, const Token &tPropName);
-            
+
 
         private:
             void newTxnIfRootStmt(bool isRoot, Txn::Mode mode);

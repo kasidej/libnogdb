@@ -41,7 +41,6 @@ namespace nogdb {
 
             enum Type {
                 NO_RESULT,
-                ERROR,
                 CLASS_DESCRIPTOR,
                 PROPERTY_DESCRIPTOR,
                 RECORD_DESCRIPTORS,
@@ -54,13 +53,16 @@ namespace nogdb {
 
             template<typename T>
             inline T &get() const {
+                static_assert(std::is_same<ClassDescriptor, T>()
+                              || std::is_same<PropertyDescriptor, T>()
+                              || std::is_same<std::vector<RecordDescriptor>, T>()
+                              || std::is_same<ResultSet, T>(),
+                              "Result of get() must be Error, ClassDescriptor, PropertyDescriptor, std::vector<RecordDescriptor> or ResultSet type");
                 return *std::static_pointer_cast<T>(this->value);
             }
 
         protected:
             Result(Type type_, std::shared_ptr<void> value_) : t(type_), value(value_) {}
-
-            Result(Error *error) : t(ERROR), value(error) {}
 
             Result(ClassDescriptor *classDescriptor) : t(CLASS_DESCRIPTOR), value(classDescriptor) {}
 
