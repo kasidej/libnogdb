@@ -46,7 +46,7 @@ using namespace std;
 using namespace nogdb::sql_parser;
 
 using nogdb::RecordDescriptor;
-using nogdb::MultiCondition;
+using nogdb::Expression;
 
 #define LEMON_SUPER Context
 
@@ -188,10 +188,10 @@ proj_item(A) ::= STRING(X) LB integer(index) RB. {
                 Projection(ProjectionType::PROPERTY, make_shared<string>(X.toString())),
                 stoull(string(index.z, index.n))));
 }
-proj_item(A) ::= IDENTITY(fName) LP projections(fArgs) RP LB cond(c) RB. {
+proj_item(A) ::= IDENTITY(fName) LP projections(fArgs) RP LB exp(c) RB. {
     A = Projection(
         ProjectionType::CONDITION,
-        make_shared<pair<Projection, Condition>>(
+        make_shared<pair<Projection, Expression>>(
             Projection(ProjectionType::FUNCTION, make_shared<Function>(fName.toString(), move(fArgs))),
             c));
 }
@@ -225,11 +225,8 @@ select_target_rids(A) ::= LP rid_set(X) RP. { A = X; }
 // where
 %type where_opt { Where }
 where_opt(A) ::= . { A = Where(); }
-where_opt(A) ::= WHERE multi_cond(X). {
-    A = Where(WhereType::MULTI_COND, X);
-}
-where_opt(A) ::= WHERE cond(X). {
-    A = Where(WhereType::CONDITION, make_shared<Condition>(move(X)));
+where_opt(A) ::= WHERE exp(X). {
+    A = Where(WhereType::EXPRESSION, make_shared<Expression>(move(X)));
 }
 
 // gropu_by
@@ -364,10 +361,10 @@ if_exists_opt(A) ::= IF EXISTS. { A = true; }
 props_opt(A) ::= . { A = nogdb::Record(); }
 props_opt(A) ::= SET props_list(X). { A = move(X); }
 props_list(A) ::= props_list(A) COMMA prop_name(prop) EQ term(value). {
-    A.set(prop, value.getBase());
+    A.set(prop, static_cast<const nogdb::Bytes&>(value));
 }
 props_list(A) ::= prop_name(prop) EQ term(value). {
-    A = nogdb::Record().set(prop, value.getBase());
+    A = nogdb::Record().set(prop, static_cast<const nogdb::Bytes&>(value));
 }
 
 %type prop_name { string }
@@ -398,52 +395,45 @@ term_list(A) ::= term_list(A) COMMA term(X). { A.push_back(move(X)); }
 term_list(A) ::= term(X). { A = vector<Bytes>{move(X)}; }
 
 
-//////////////////// Condition Processing ////////////////////
+//////////////////// Expression Processing ////////////////////
 %left OR.
 %left AND.
 %left LT GT GE LE.
 %left EQ NE.
 %left NOT.
 
-%type multi_cond { shared_ptr<MultiCondition> } // use shared_ptr because constructor of MultiCondition is already deleted
-multi_cond(A) ::= LP multi_cond(X) RP. { A = X; }
-multi_cond(A) ::= multi_cond(X) AND multi_cond(Y). { A = make_shared<MultiCondition>(*X && *Y); }
-multi_cond(A) ::= multi_cond(X) OR multi_cond(Y). { A = make_shared<MultiCondition>(*X || *Y); }
-multi_cond(A) ::= multi_cond(X) AND cond(Y). { A = make_shared<MultiCondition>(*X && Y); }
-multi_cond(A) ::= multi_cond(X) OR cond(Y). { A = make_shared<MultiCondition>(*X || Y); }
-multi_cond(A) ::= cond(X) AND multi_cond(Y). { A = make_shared<MultiCondition>(X && *Y); }
-multi_cond(A) ::= cond(X) OR multi_cond(Y). { A = make_shared<MultiCondition>(X || *Y); }
-multi_cond(A) ::= cond(X) AND cond(Y). { A = make_shared<MultiCondition>(X && Y); }
-multi_cond(A) ::= cond(X) OR cond(Y). { A = make_shared<MultiCondition>(X || Y); }
-multi_cond(A) ::= NOT multi_cond(X). { A = make_shared<MultiCondition>(!(*X)); }
+%type exp { Expression }
+exp(A) ::= LP exp(X) RP. { A = move(X); }
+exp(A) ::= NOT exp(X). { A = move(!X); }
+exp(A) ::= exp(X) AND exp(Y). { A = move(X) && move(Y); }
+exp(A) ::= exp(X) OR exp(Y). { A = move(X) || move(Y); }
 
-%type cond { Condition }
-cond(A) ::= LP cond(X) RP. { A = move(X); }
-cond(A) ::= NOT cond(X). { A = !X; }
-cond(A) ::= prop_name(prop) EQ term(value). { A = Condition(prop).eq(value); }
-cond(A) ::= prop_name(prop) NE term(value). { A = !Condition(prop).eq(value); }
-cond(A) ::= prop_name(prop) GT term(value). { A = Condition(prop).gt(value.getBase()); }
-cond(A) ::= prop_name(prop) LT term(value). { A = Condition(prop).lt(value.getBase()); }
-cond(A) ::= prop_name(prop) GE term(value). { A = Condition(prop).ge(value.getBase()); }
-cond(A) ::= prop_name(prop) LE term(value). { A = Condition(prop).le(value.getBase()); }
-cond(A) ::= prop_name(prop) IS term(value). { A = Condition(prop).eq(value); }
-cond(A) ::= prop_name(prop) IS NOT term(value). { A = !Condition(prop).eq(value); }
-cond(A) ::= prop_name(prop) CONTAIN CASE term(value). { A = Condition(prop).contain(value.getBase()); }
-cond(A) ::= prop_name(prop) CONTAIN term(value). { A = Condition(prop).contain(value.getBase()).ignoreCase(); }
-cond(A) ::= prop_name(prop) BEGIN WITH CASE term(value). { A = Condition(prop).beginWith(value.getBase()); }
-cond(A) ::= prop_name(prop) BEGIN WITH term(value). { A = Condition(prop).beginWith(value.getBase()).ignoreCase(); }
-cond(A) ::= prop_name(prop) END WITH CASE term(value). { A = Condition(prop).endWith(value.getBase()); }
-cond(A) ::= prop_name(prop) END WITH term(value). { A = Condition(prop).endWith(value.getBase()).ignoreCase(); }
-cond(A) ::= prop_name(prop) LIKE CASE term(value). { A = Condition(prop).like(value.getBase()); }
-cond(A) ::= prop_name(prop) LIKE term(value). { A = Condition(prop).like(value.getBase()).ignoreCase(); }
-cond(A) ::= prop_name(prop) REGEX CASE term(value). { A = Condition(prop).regex(value.getBase()); }
-cond(A) ::= prop_name(prop) REGEX term(value). { A = Condition(prop).regex(value.getBase()).ignoreCase(); }
-cond(A) ::= prop_name(prop) BETWEEN term(value1) AND term(value2). { A = Condition(prop).between(value1.getBase(), value2.getBase()); }
-cond(A) ::= prop_name(prop) IDENTITY(cmp) LB term_list(values) RB. {
+exp(A) ::= prop_name(prop) EQ term(value). { A = Expression(prop).eq(value); }
+exp(A) ::= prop_name(prop) NE term(value). { A = !Expression(prop).eq(value); }
+exp(A) ::= prop_name(prop) GT term(value). { A = Expression(prop).gt(value); }
+exp(A) ::= prop_name(prop) LT term(value). { A = Expression(prop).lt(value); }
+exp(A) ::= prop_name(prop) GE term(value). { A = Expression(prop).ge(value); }
+exp(A) ::= prop_name(prop) LE term(value). { A = Expression(prop).le(value); }
+exp(A) ::= prop_name(prop) IS term_no_null(value). { A = Expression(prop).eq(value); }
+exp(A) ::= prop_name(prop) IS NOT term_no_null(value). { A = !Expression(prop).eq(value); }
+exp(A) ::= prop_name(prop) IS NULL. { A = Expression(prop).null(); }
+exp(A) ::= prop_name(prop) IS NOT NULL. { A = !Expression(prop).null(); }
+exp(A) ::= prop_name(prop) CONTAIN CASE term(value). { A = Expression(prop).contain(value); }
+exp(A) ::= prop_name(prop) CONTAIN term(value). { A = Expression(prop).contain(value).ignoreCase(); }
+exp(A) ::= prop_name(prop) BEGIN WITH CASE term(value). { A = Expression(prop).beginWith(value); }
+exp(A) ::= prop_name(prop) BEGIN WITH term(value). { A = Expression(prop).beginWith(value).ignoreCase(); }
+exp(A) ::= prop_name(prop) END WITH CASE term(value). { A = Expression(prop).endWith(value); }
+exp(A) ::= prop_name(prop) END WITH term(value). { A = Expression(prop).endWith(value).ignoreCase(); }
+exp(A) ::= prop_name(prop) LIKE CASE term(value). { A = Expression(prop).like(value); }
+exp(A) ::= prop_name(prop) LIKE term(value). { A = Expression(prop).like(value).ignoreCase(); }
+exp(A) ::= prop_name(prop) REGEX CASE term(value). { A = Expression(prop).regex(value); }
+exp(A) ::= prop_name(prop) REGEX term(value). { A = Expression(prop).regex(value).ignoreCase(); }
+exp(A) ::= prop_name(prop) BETWEEN term(value1) AND term(value2). { A = Expression(prop).between(value1, value2); }
+exp(A) ::= prop_name(prop) IDENTITY(cmp) LB term_list(values) RB. {
     if (strncasecmp(cmp.z, "IN", cmp.n) == 0) {
         vector<nogdb::Bytes> baseValues(values.size());
-        transform(values.begin(), values.end(), baseValues.begin(), [](const Bytes& v){ return v.getBase(); });
-        A = Condition(prop).in(baseValues);
+        transform(values.begin(), values.end(), baseValues.begin(), [](const Bytes& v) -> nogdb::Bytes { return v; });
+        A = Expression(prop).in(baseValues);
     } else {
         this->syntax_error(-1, cmp);
     }
@@ -451,5 +441,9 @@ cond(A) ::= prop_name(prop) IDENTITY(cmp) LB term_list(values) RB. {
 //cond(A) ::= IDENTITY(propA) cmp IDENTITY(propB). NOT_IMPLEMENTED
 
 %type term { Bytes }
+%type term_no_null { Bytes }
 term(A) ::= term_token(X). { A = X.toBytes(); }
-term_token(A) ::= NULL|FLOAT|STRING|SIGNED|UNSIGNED|BLOB(X). { A = X; }
+term_no_null(A) ::= term_token_no_null(X). { A = X.toBytes(); }
+term_token(A) ::= NULL(X). { A = X; }
+term_token(A) ::= term_token_no_null(X). { A = X; }
+term_token_no_null(A) ::= FLOAT|STRING|SIGNED|UNSIGNED|BLOB(X). { A = X; }

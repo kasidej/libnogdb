@@ -927,7 +927,7 @@ void test_sql_select_vertex_condition() {
 
         result = SQL::execute(txn, "SELECT FROM v WHERE int=18");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("int").eq(Bytes(Bytes(18)))));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Expression("int").eq(Bytes(18))));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE uint=11600");
         assert(result.type() == result.RESULT_SET);
@@ -990,11 +990,12 @@ void test_sql_select_vertex_condition() {
 
         result = SQL::execute(txn, "SELECT FROM v WHERE bigint IS NULL");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", Condition("bigint").null()));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", nogdb::Expression("bigint").null()));
 
         result = SQL::execute(txn, "SELECT FROM v WHERE int IS NOT NULL");
         assert(result.type() == result.RESULT_SET);
-        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not Condition("int").null()));
+        assert(result.get<ResultSet>() == Vertex::get(txn, "v", not nogdb::Expression("int").null()));
+
 
         result = SQL::execute(txn, "SELECT FROM v WHERE text = 100");
         assert(result.type() == result.RESULT_SET);

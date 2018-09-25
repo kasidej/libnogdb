@@ -56,17 +56,35 @@ namespace nogdb {
                                const Bytes &rhs,
                                PropertyType type,
                                bool ignoreCase) {
-        if (PropertyType::TEXT == type) {
-            auto lhsText = lhs.toText();
-            auto rhsText = rhs.toText();
-            if (ignoreCase) {
-                return strcasecmp(lhsText.c_str(), rhsText.c_str()) == 0;
-            } else {
-                return strcmp(lhsText.c_str(), rhsText.c_str()) == 0;
-            }
-        } else {
-            return (lhs.size() >= rhs.size()
-                    && memcmp(lhs.getRaw(), rhs.getRaw(), rhs.size()) == 0);
+        switch (type) {
+            case PropertyType::TINYINT:
+                return lhs.toTinyInt() == rhs.toTinyInt();
+            case PropertyType::UNSIGNED_TINYINT:
+                return lhs.toTinyIntU() == rhs.toTinyIntU();
+            case PropertyType::SMALLINT:
+                return lhs.toSmallInt() == rhs.toSmallInt();
+            case PropertyType::UNSIGNED_SMALLINT:
+                return lhs.toSmallIntU() == rhs.toSmallIntU();
+            case PropertyType::INTEGER:
+                return lhs.toInt() == rhs.toInt();
+            case PropertyType::UNSIGNED_INTEGER:
+                return lhs.toIntU() == rhs.toIntU();
+            case PropertyType::BIGINT:
+                return lhs.toBigInt() == rhs.toBigInt();
+            case PropertyType::UNSIGNED_BIGINT:
+                return lhs.toBigIntU() == rhs.toBigIntU();
+            case PropertyType::REAL:
+                return lhs.toReal() == rhs.toReal();
+            case PropertyType::TEXT:
+                if (ignoreCase) {
+                    return strcasecmp(lhs.toText().c_str(), rhs.toText().c_str()) == 0;
+                } else {
+                    return lhs.toText() == rhs.toText();
+                }
+            case PropertyType::BLOB:
+                return lhs.size() == rhs.size() && memcmp(lhs.getRaw(), rhs.getRaw(), lhs.size()) == 0;
+            default:
+                throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_INVALID_PROPTYPE);
         }
     }
 
@@ -219,10 +237,10 @@ namespace nogdb {
         if (PropertyType::TEXT == type) {
             if (ignoreCase) {
                 return (lhs.size() >= rhs.size()
-                        && strcasestr((char *)lhs.getRaw(), rhs.toText().c_str()) != NULL);
+                        && strcasestr(lhs.toText().c_str(), rhs.toText().c_str()) != NULL);
             } else {
                 return (lhs.size() >= rhs.size()
-                        && strstr((char *)lhs.getRaw(), rhs.toText().c_str()) != NULL);
+                        && strstr(lhs.toText().c_str(), rhs.toText().c_str()) != NULL);
             }
         } else {
             throw NOGDB_CONTEXT_ERROR(NOGDB_CTX_INVALID_COMPARATOR);

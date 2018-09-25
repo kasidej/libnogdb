@@ -56,6 +56,7 @@ namespace nogdb {
             BETWEEN_NO_BOUND
         };
 
+        Expression() = default;
         explicit Expression(const std::string &propName);
         explicit Expression(const ConditionFunction &func);
         Expression(const std::string &propName, const Comparator &cmp, const Bytes &value);

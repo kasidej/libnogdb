@@ -130,13 +130,13 @@ namespace nogdb {
 
             static Bytes getProjectionItemArraySelector(Txn &txn, const Result &input, const Projection &proj, unsigned long index, const PropertyMapType &map);
 
-            static Bytes getProjectionItemCondition(Txn &txn, const Result &input, const Function &func, const Condition &cond);
+            static Bytes getProjectionItemCondition(Txn &txn, const Result &input, const Function &func, const Expression &exp);
 
             static ClassType findClassType(Txn &txn, const string &className);
 
             static PropertyMapType getPropertyMapTypeFromClassDescriptor(Txn &txn, ClassId classID);
 
-            static ResultSet executeCondition(Txn &txn, const ResultSet &input, const MultiCondition &conds);
+            static ResultSet executeExpression(Txn &txn, const ResultSet &input, const Expression &exp);
 
             /* LEMONXX base */
         public:

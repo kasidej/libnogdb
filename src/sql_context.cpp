@@ -279,12 +279,8 @@ void Context::deleteEdge(const DeleteEdgeArgs &args) {
                 case WhereType::NO_COND:
                     edges = Vertex::getOutEdge(this->txn, src.descriptor, ClassFilter({className}));
                     break;
-                case WhereType::CONDITION:
-                    edges = Vertex::getOutEdge(this->txn, src.descriptor, args.where.get<Condition>(),
-                                               ClassFilter({className}));
-                    break;
-                case WhereType::MULTI_COND:
-                    edges = Vertex::getOutEdge(this->txn, src.descriptor, args.where.get<MultiCondition>(),
+                case WhereType::EXPRESSION:
+                    edges = Vertex::getOutEdge(this->txn, src.descriptor, args.where.get<Expression>(),
                                                ClassFilter({className}));
                     break;
             }
@@ -303,12 +299,8 @@ void Context::deleteEdge(const DeleteEdgeArgs &args) {
                     case WhereType::NO_COND:
                         edges = Vertex::getInEdge(this->txn, dest.descriptor, ClassFilter({className}));
                         break;
-                    case WhereType::CONDITION:
-                        edges = Vertex::getInEdge(this->txn, dest.descriptor, args.where.get<Condition>(),
-                                                  ClassFilter({className}));
-                        break;
-                    case WhereType::MULTI_COND:
-                        edges = Vertex::getInEdge(this->txn, dest.descriptor, args.where.get<MultiCondition>(),
+                    case WhereType::EXPRESSION:
+                        edges = Vertex::getInEdge(this->txn, dest.descriptor, args.where.get<Expression>(),
                                                   ClassFilter({className}));
                         break;
                 }
@@ -437,38 +429,26 @@ ResultSet Context::select(const RecordDescriptorSet &rids) {
 }
 
 nogdb::ResultSetCursor Context::selectVertex(const string &className, const Where &where) {
-    switch (where.type) {
-        case WhereType::CONDITION:
-            return nogdb::Vertex::getCursor(this->txn, className, where.get<Condition>());
-        case WhereType::MULTI_COND:
-            return nogdb::Vertex::getCursor(this->txn, className, where.get<MultiCondition>());
-        case WhereType::NO_COND:
-        default:
-            return Vertex::getCursor(this->txn, className);
+    if (WhereType::EXPRESSION == where.type) {
+        return nogdb::Vertex::getCursor(this->txn, className, where.get<Expression>());
+    } else {
+        return nogdb::Vertex::getCursor(this->txn, className);
     }
 }
 
 nogdb::ResultSetCursor Context::selectEdge(const string &className, const Where &where) {
-    switch (where.type) {
-        case WhereType::CONDITION:
-            return nogdb::Edge::getCursor(this->txn, className, where.get<Condition>());
-        case WhereType::MULTI_COND:
-            return nogdb::Edge::getCursor(this->txn, className, where.get<MultiCondition>());
-        case WhereType::NO_COND:
-        default:
-            return nogdb::Edge::getCursor(this->txn, className);
+    if (WhereType::EXPRESSION == where.type) {
+        return nogdb::Edge::getCursor(this->txn, className, where.get<Expression>());
+    } else {
+        return nogdb::Edge::getCursor(this->txn, className);
     }
 }
 
 ResultSet Context::selectWhere(ResultSet &input, const Where &where) {
-    if (where.type == WhereType::NO_COND || input.size() == 0) {
+    if (WhereType::NO_COND == where.type || input.size() == 0) {
         return move(input);
-    } else /* if (where.type == WhereType::CONDITION || where.type == WhereType::MULTI_COND) */ {
-        static MultiCondition alwaysTrue = Condition(RECORD_ID_PROPERTY) || !Condition(RECORD_ID_PROPERTY);
-        MultiCondition exp = (where.type == WhereType::MULTI_COND
-                              ? where.get<MultiCondition>()
-                              : where.get<Condition>() && alwaysTrue);
-        return Context::executeCondition(this->txn, input, exp);
+    } else /* if (WhereType::EXPERESSION == where.type) */ {
+        return Context::executeExpression(this->txn, input, where.get<Expression>());
     }
 }
 
@@ -604,7 +584,7 @@ Bytes Context::getProjectionItem(Txn &txn, const Result &input, const Projection
             return Context::getProjectionItemArraySelector(txn, input, arrSel.first, arrSel.second, map);
         }
         case ProjectionType::CONDITION: {
-            const auto &cond = proj.get<pair<Projection, Condition>>();
+            const auto &cond = proj.get<pair<Projection, Expression>>();
             if (cond.first.type != ProjectionType::FUNCTION) {
                 throw NOGDB_SQL_ERROR(NOGDB_SQL_INVALID_PROJECTION);
             }
@@ -672,15 +652,14 @@ Bytes Context::getProjectionItemArraySelector(Txn &txn, const Result &input, con
     }
 }
 
-Bytes Context::getProjectionItemCondition(Txn &txn, const Result &input, const Function &func, const Condition &cond) {
+Bytes Context::getProjectionItemCondition(Txn &txn, const Result &input, const Function &func, const Expression &exp) {
     if (!func.isWalkResult()) {
         throw NOGDB_SQL_ERROR(NOGDB_SQL_INVALID_PROJECTION);
     }
 
     Bytes resA = func.execute(txn, input);
     if (resA.isResults()) {
-        static MultiCondition alwaysTrue = Condition(RECORD_ID_PROPERTY) || !Condition(RECORD_ID_PROPERTY);
-        ResultSet result = Context::executeCondition(txn, resA.results(), cond && alwaysTrue);
+        ResultSet result = Context::executeExpression(txn, resA.results(), exp);
         if (!result.empty()) {
             return Bytes(move(result));
         } else {
@@ -713,7 +692,7 @@ nogdb::PropertyMapType Context::getPropertyMapTypeFromClassDescriptor(Txn &txn, 
     }
 }
 
-ResultSet Context::executeCondition(Txn &txn, const ResultSet &input, const MultiCondition &conds) {
+ResultSet Context::executeExpression(Txn &txn, const ResultSet &input, const Expression &exp) {
     ResultSet result{};
     PropertyMapType mapProp{};
     ClassId previousClassID = -1;
@@ -740,7 +719,7 @@ ResultSet Context::executeCondition(Txn &txn, const ResultSet &input, const Mult
             // no-op;
         }
 
-        if (conds.execute(in->record.toBaseRecord(), mapProp)) {
+        if (exp.execute(in->record.toBaseRecord(), mapProp)) {
             result.push_back(move(*in));
         }
 

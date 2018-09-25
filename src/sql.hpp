@@ -101,8 +101,6 @@ namespace nogdb {
 
             inline ResultSet &results() const { return *this->r; }
 
-            inline const nogdb::Bytes &getBase() const { return *this; }
-
         private:
             PropertyType t{PropertyType::UNDEFINED};
             shared_ptr<ResultSet> r{nullptr};
@@ -165,23 +163,6 @@ namespace nogdb {
             ResultSet& limit(int skip, int limit);
         };
 
-        class Condition : public nogdb::Condition {
-        public:
-            Condition(const string &propName = "") : nogdb::Condition(propName) {}
-
-            Condition(const nogdb::Condition &rhs) : nogdb::Condition(rhs) {}
-
-            using nogdb::Condition::eq;
-
-            Condition eq(const Bytes &value) const {
-                if (!value.empty()) {
-                    return this->eq(value.getBase());
-                } else {
-                    return this->null();
-                }
-            }
-        };
-
 
         /* A class for arguments holder */
         template<class E>
@@ -211,15 +192,14 @@ namespace nogdb {
         };
         enum class WhereType {
             NO_COND,
-            CONDITION,  // nogdb::Condition
-            MULTI_COND  // nogdb::MultiCondition
+            EXPRESSION  // nogdb::Expression
         };
         enum class ProjectionType {
             PROPERTY,   // std::string
             FUNCTION,   // sql_parser::Function
             METHOD,     // std::pair<sql_parser::Projection, sql_parser::Projection>
             ARRAY_SELECTOR, // std::pair<sql_parser::Projection, unsigned long>
-            CONDITION,  // std::pair<sql_parser::Projection, nogdb::Condition>
+            CONDITION,  // std::pair<sql_parser::Projection, nogdb::Expression>
             ALIAS,      // std::pair<sql_parser::Projection, string>
         };
         typedef Holder<TargetType> Target;  /* A classname, set of rid or nested select statement */
